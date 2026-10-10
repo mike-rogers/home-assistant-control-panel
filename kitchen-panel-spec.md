@@ -1,6 +1,6 @@
 # Kitchen Panel — ESP32 Home Assistant Controller
 
-Handoff spec for development. The hardware details marked **OPEN** are not decided. Ask the owner about them before writing code that depends on them.
+Handoff spec for development. Hardware details marked **OPEN** are not decided; ask the owner before writing code that depends on them. Decisions made after the original handoff are recorded in §12.
 
 ## 1. Context
 
@@ -12,67 +12,60 @@ The primary user is the owner, but anyone in the family should be able to use it
 
 ## 2. Environment and constraints
 
-- **Firmware:** ESP-IDF (C). The owner strongly prefers ESP-IDF. **Do not use ESPHome or Arduino.** Use ESP-IDF's own components wherever possible: `esp_wifi`, `esp-mqtt`, `nvs_flash`, `cJSON`, `driver/i2c`, and the IDF component manager for anything else (for example LVGL via `esp_lvgl_port`).
-- **Home Assistant:** Home Assistant OS, with the Mosquitto broker add-on already installed. The MQTT integration is assumed to be configured.
+- **Firmware:** ESP-IDF **v6.0** (C). **Do not use ESPHome or Arduino.** Use ESP-IDF's own components wherever possible: `esp_wifi`, `esp-mqtt`, `nvs_flash`, `cJSON`, `driver/i2c_master`, and the IDF component manager for anything else (LVGL via `esp_lvgl_port`).
+- **Home Assistant:** current Home Assistant OS, with the Mosquitto broker app installed and the MQTT integration configured.
 - **Network:** 2.4 GHz Wi-Fi on the same LAN as HA.
 - **Latency:** the device's own screen must respond to input immediately (target under 50 ms, with no network in the loop). Action acknowledgement from HA should normally arrive well under a second.
 - **Power:** mains USB. A battery backup is a possible later addition, so keep power management behind an abstraction. Do not design around deep sleep in v1.
+- **Sibling project:** `../taskpad` is the reference implementation for Wi-Fi provisioning (Improv over BLE), adoption (mDNS + local HTTP + HA zeroconf config flow), OTA (HA `update` entity + `esp_https_ota` with rollback), and the ANO seesaw driver. Copy and adapt those modules; extracting a shared component is deferred until a third device exists.
 
-### Hardware — OPEN
+### Hardware
 
-- ESP32 variant/board: **OPEN.** The owner has many unprovisioned ESP32 boards. Ask which one. Prefer one with PSRAM if LVGL is used.
-- LCD: **OPEN** (model, controller IC, resolution, interface).
-- Input: an Adafruit ANO directional navigation + scroll wheel encoder on an I2C seesaw breakout (STEMMA QT / Qwiic). It has a rotary ring, a center button, and four directional buttons. A plain I2C rotary encoder is also on hand. Confirm which one is used and its I2C address.
-- Dedicated "Oops" button: **OPEN.** Either a separate, clearly labeled physical button (preferred for discoverability) or one of the ANO direction buttons.
+- ESP32 board: **SparkFun MicroMod ESP32 Processor** (classic ESP32-D0WD, 16 MB flash, no PSRAM) on a MicroMod carrier. Carrier board and pin map: **OPEN**.
+- LCD: **OPEN** (model, controller IC, resolution, interface, whether the backlight is PWM-dimmable). Keep the display layer behind an interface so the rest of the firmware is buildable and testable without it.
+- Input: **Adafruit ANO** directional navigation + scroll wheel on its I2C seesaw adapter (product 5740, STEMMA QT, address 0x49).
+- No dedicated Oops button. Undo is an on-screen menu item (§6).
 
 ## 3. Architecture
 
 ```
-[Kitchen Panel] ⇄ MQTT (Mosquitto) ⇄ [HA: dispatcher script + automations]
+[Kitchen Panel] ⇄ MQTT (Mosquitto) ⇄ [HA: kitchen_panel custom integration]
        ▲                                        │
        └── retained menu JSON + entity states ──┘
 ```
 
 Design principles:
 
-1. **The menu is defined in HA, not in the firmware.** HA publishes the menu tree as retained JSON, and the device renders whatever it receives. Adding or reordering actions should never require reflashing.
+1. **The menu is defined in HA, not in the firmware.** The owner composes it in a dashboard card; the integration publishes it as retained JSON, and the device renders whatever it receives. Adding or reordering actions never requires reflashing.
 2. **The firmware is a generic engine.** It renders the tree, edits values, publishes requests, and shows results. It knows nothing about lights, kids, or bedtime.
-3. **Input is abstracted.** Hardware drivers emit logical input events. The UI consumes only logical events, so new input devices (another encoder, buttons, a remote ESP32) can be added later without touching UI logic.
-4. **Undo is owned by HA.** HA owns the state and has the tools for it, such as scene snapshots.
-5. **The device should become a reusable pattern** for future panels (for example a bedside "Good night" panel). Make the device ID configurable and namespace all topics by it.
+3. **Input is abstracted.** Hardware drivers emit logical input events. The UI consumes only logical events, so new input devices can be added later without touching UI logic.
+4. **Undo is owned by HA.** HA owns the state and has the tools for it (scene snapshots).
+5. **The device is a reusable pattern** for future panels (for example a bedside "Good night" panel). The integration supports one config entry per panel; every topic is namespaced by the panel's device ID.
 
 ## 4. MQTT contract
 
-`<id>` is the device ID, configurable, defaulting to `kitchenpanel`. All payloads are UTF-8 JSON unless noted.
+`<id>` is the device ID, derived from the MAC (`panel-xxxxxx`) and reported during adoption. All payloads are UTF-8 JSON unless noted.
 
 | Topic | Direction | Retained | Payload |
 |---|---|---|---|
 | `panel/<id>/availability` | device → | yes | `online` / `offline` (plain text; `offline` set as LWT) |
+| `panel/<id>/status` | device → | yes | `{ "version": "x.y.z", "rssi": -61 }` (re-published periodically) |
 | `panel/<id>/menu` | HA → device | yes | Menu tree (§5) |
 | `panel/<id>/request` | device → HA | no | `{ "request_id": "...", "item_id": "...", "op": "run" \| "set" \| "undo", "value": ... }` |
-| `panel/<id>/result` | HA → device | no | `{ "request_id": "...", "status": "ok" \| "error", "message": "...", "undo_until": <unix seconds or null> }` |
+| `panel/<id>/result` | HA → device | no | `{ "request_id": "...", "status": "ok" \| "error", "message": "...", "undo_seconds": <int or null> }` |
 | `panel/<id>/state/<entity_id>` | HA → device | yes | `{ "state": "...", "attributes": { ... } }` for entities referenced by the menu |
-| `homeassistant/status` | HA → device | — | HA birth message; on `online`, re-publish discovery |
+| `panel/<id>/ota` | HA → device | no | `{ "url": "http://..." }` |
 
 Notes:
 
-- `request_id` is unique per request (for example a monotonic counter plus boot ID). The device matches results to requests and times out after a few seconds, showing "No response from Home Assistant".
+- `request_id` is unique per request (a monotonic counter plus a boot ID). The device matches results to requests and times out after a few seconds, showing "No response from Home Assistant".
 - **Never queue requests while offline.** A "Good night" that fires minutes late is worse than one that fails visibly. If MQTT is disconnected, show the error and drop the request.
-- The device subscribes to `panel/<id>/state/#`. HA publishes states for the menu's referenced entities (§7). This is how the device shows the current wakeup time, for example.
-
-### Home Assistant MQTT discovery
-
-The device appears in HA as a proper device with no YAML required. It uses MQTT discovery: `homeassistant/<component>/<id>/<object>/config`, or the device-based discovery topic if the HA version supports it. Expose at least:
-
-- Wi-Fi RSSI (diagnostic sensor)
-- Firmware version (diagnostic sensor)
-- Last action (sensor: the `item_id` of the last successful request)
-
-Re-publish discovery on connect and whenever `homeassistant/status` becomes `online`.
+- `undo_seconds` is relative, so the device needs no wall clock for undo. The device starts its countdown when the result arrives.
+- The device does **not** publish MQTT discovery. The integration owns the HA device and its entities (connectivity, Wi-Fi RSSI, firmware update, last action), as in taskpad.
 
 ## 5. Menu model
 
-The menu is published retained by HA. The schema is versioned so the firmware can reject a menu it doesn't understand.
+The integration publishes the menu retained. The schema is versioned so the firmware can reject a menu it doesn't understand.
 
 ```json
 {
@@ -108,6 +101,8 @@ The menu is published retained by HA. The schema is versioned so the firmware ca
 }
 ```
 
+The device-facing JSON is deliberately minimal: what the action *does* (which script, which entities to snapshot) lives only in the integration's storage and never reaches the device.
+
 Item types for v1:
 
 | `type` | Behavior |
@@ -130,15 +125,17 @@ Rules:
 
 `NAV_NEXT`, `NAV_PREV`, `SELECT`, `BACK`, `HOME`, `UNDO`.
 
-### Default mapping for the ANO wheel (configurable)
+### Default mapping for the ANO wheel
 
 | Hardware | Event |
 |---|---|
 | Ring clockwise / counter-clockwise | `NAV_NEXT` / `NAV_PREV` (or value up/down in edit mode) |
+| Down / Up buttons | `NAV_NEXT` / `NAV_PREV` |
 | Center | `SELECT` |
 | Left | `BACK` |
-| Up | `HOME` |
-| Dedicated Oops button (or ANO right, if no dedicated button) | `UNDO` |
+| Right | unassigned |
+
+`UNDO` exists as a logical event for a possible future button; no hardware is mapped to it in v1.
 
 ### Screens
 
@@ -146,65 +143,78 @@ Rules:
 - **Edit (time):** a large value, and a hint line such as "Turn to change · Press to save · ◀ cancel".
 - **Confirm:** "Summon the kids?" with the selection on **No** by default, so a stray press does nothing.
 - **Result toast:** "Done", or the error message, for about 2 s.
-- **Undo banner:** after an undoable action, show "Oops? (Ns)" with a countdown until `undo_until`. Pressing `UNDO` sends `op: "undo"` with the original `item_id`. Outside the window, `UNDO` shows "Nothing to undo".
+- **Oops item:** after an undoable operation succeeds, a row "↶ Oops: undo <label> (Ns)" is pinned to the bottom of whichever menu list is shown, counting down `undo_seconds`. Selecting it sends `op: "undo"` with the original `item_id`. It disappears when the countdown ends. The cursor never jumps to it automatically. Only the most recent operation is undoable.
 - **Status:** a small indicator for Wi-Fi/MQTT/HA connectivity, always visible.
 
 ### Behavior
 
-- Return to the top menu after about 30 s of inactivity. Dim the backlight after about 60 s, and wake on any input without acting on that input.
+- Return to the top menu after about 30 s of inactivity (the Oops item, if live, stays visible there). Dim the backlight after about 60 s, and wake on any input without acting on that input.
 - No feature may be reachable only by long-press or by combinations of buttons.
 
-## 7. Home Assistant side (also deliver this)
+## 7. Home Assistant side: `custom_components/kitchen_panel`
 
-Deliver this as a YAML package (`packages/kitchen_panel.yaml`) the owner can drop in. It contains:
+A custom integration modeled on taskpad's, with these differences: multiple config entries (one per panel), and the menu editor described below.
 
-1. **Menu publisher.** A script plus an automation that publish the menu JSON, retained, to `panel/kitchenpanel/menu`. It runs on HA start and can be run manually. Keep the menu definition in one obvious place in the YAML.
-2. **State publisher.** An automation that publishes the current state of each entity referenced by the menu to `panel/kitchenpanel/state/<entity_id>` (retained). It runs on change and on HA start. HA's built-in `mqtt_statestream` is an alternative; use whichever is cleaner, but keep the topic contract in §4.
-3. **Dispatcher.** An automation triggered by MQTT on `panel/kitchenpanel/request` that maps `item_id` to an HA script or service call and publishes a `result`.
-   - For `undo: true` items: before running the action, call `scene.create` with `snapshot_entities` for the entities that action affects. Use a per-item undo scene, and record the deadline (now + 30 s).
-   - `op: "undo"`: if the window is open, run `scene.turn_on` on the snapshot, then publish the result. Otherwise return an error.
-   - `op: "set"` on `wake_time`: call `input_datetime.set_datetime`. Snapshot the previous value so that undo restores it.
-4. **Action scripts.** Thin wrappers that call the owner's existing scripts and automations ("Good night", "Brighten living room", "Summon the kids"). Leave clearly marked placeholders where the owner must fill in real entity or script IDs, and do not invent entity IDs as if they were real. Known: `input_datetime.house_wakeup_time` holds the house wake-up time. Confirm its exact entity ID with the owner.
+1. **Discovery and adoption.** The device advertises `_kpanel._tcp` over mDNS. The integration's zeroconf config flow pushes broker credentials to the device's local API, as in taskpad.
+2. **Menu storage and editor.** The menu tree for each panel lives in the integration's `.storage`. A dashboard card (`custom:kitchen-panel-card`) edits it: add items using HA's entity pickers (scripts, automations, scenes, `input_datetime`, and any entity for `info`), group them into submenus (max depth 3), reorder them, and set the label, confirm, undo, and step size. Saving publishes the retained menu immediately. Matching services exist for automations and Developer Tools.
+3. **State publisher.** The integration tracks every entity referenced by the menu and publishes `panel/<id>/state/<entity_id>` (retained) on change and on startup.
+4. **Dispatcher.** Python, subscribed to `panel/<id>/request`:
+   - `run`: calls the item's target (`script.turn_on`, `automation.trigger`, `scene.turn_on`) and publishes `result`.
+   - For undoable items, before running: `scene.create` with `snapshot_entities`. By default the integration derives that list from what the target references, recursing through nested scripts and expanding device and area targets. The card can override it per item. Undo window: 30 s by default.
+   - `set` on a `time` item: snapshot, then `input_datetime.set_datetime`.
+   - `undo`: if the window is open and `item_id` matches the most recent operation, `scene.turn_on` the snapshot. Otherwise return an error.
+5. **Device entities.** Connectivity (binary sensor), Wi-Fi RSSI (diagnostic sensor), Last action (sensor), Firmware (update entity, served the same way as taskpad's).
 
-## 8. Firmware structure (suggested)
+## 8. Firmware structure
 
 ```
 main/
   app_main.c        — init, task wiring
-  net/              — wifi, mqtt client, discovery, reconnect/backoff
+  net/              — wifi, improv_ble, adopt_server, mqtt client, ota
   menu/             — JSON parse/validate, NVS persistence, tree model
-  ui/               — screens and state machine (consumes logical events only)
-  input/            — input event queue + drivers (ano_seesaw.c, encoder.c, button.c)
+  ui/               — state machine (pure C, consumes logical events) + LVGL rendering
+  input/            — input event queue + drivers (ano_seesaw.c)
   display/          — LCD driver + LVGL port (OPEN: depends on panel)
   power/            — backlight / future battery abstraction
+test/host/          — IDF linux-target Unity tests for menu/ and the UI state machine
 ```
 
-- Use a FreeRTOS queue between input drivers and the UI task.
-- The UI state machine (`menu/` + `ui/` logic, minus rendering) should be testable on the host using the IDF `linux` target or plain Unity tests. Cover menu parsing, navigation, edit/commit/cancel, confirm defaults, and undo-window logic.
-- Configuration: Wi-Fi SSID/password, MQTT URI/user/password, and device ID come from `menuconfig` defaults, are stored in NVS, and are never committed to the repo. Include an `sdkconfig.defaults` and a `.gitignore` covering secrets.
+- A FreeRTOS queue sits between the input drivers and the UI task.
+- The UI state machine (menu model + navigation, minus rendering) is pure C with no IDF dependencies, and is tested on the host: menu parsing, navigation, edit/commit/cancel, confirm defaults, and Oops window logic.
+- Configuration follows taskpad: Wi-Fi via Improv BLE (menuconfig values remain an empty-by-default dev fallback), and broker settings pushed during adoption, both stored in NVS. `sdkconfig` is gitignored.
 - Wi-Fi and MQTT reconnect with backoff. The UI keeps running and shows offline state.
+- Two OTA app slots, with rollback until the first healthy MQTT connect.
 
 ## 9. Acceptance criteria
 
-1. On first boot with credentials, the device connects, appears in HA under MQTT devices, and renders the menu published by HA.
-2. Editing the menu YAML in HA and re-running the publisher updates the device's menu with no reflash.
+1. A factory-fresh device is provisioned over Improv BLE, discovered in HA, adopted, and renders the menu.
+2. Editing the menu in the card updates the device's menu with no reflash and no HA restart.
 3. Turning the wheel moves the selection with no perceptible lag, including while HA is unreachable.
-4. "Good night" runs, shows "Done", and offers a 30 s Oops window. Oops restores the snapshotted lights.
+4. "Good night" runs, shows "Done", and shows the Oops item for 30 s. Selecting it restores the snapshotted lights.
 5. "Summon the kids" asks for confirmation, with No selected by default.
 6. Tomorrow's wake-up time can be changed in 15-minute steps. HA reflects the new value, the dashboard shows it, and Oops restores the old value.
 7. When Mosquitto is stopped, the device shows offline status, refuses actions with a visible message, and recovers on its own when the broker returns.
 8. After a power cycle with HA down, the last known menu is shown from NVS.
+9. A firmware update installs from the HA device page.
 
 ## 10. Out of scope for v1
 
 - Driving the kitchen wall display (for example navigating its dashboard). This may be added later as a menu action type.
 - Battery operation and deep sleep.
-- OTA updates (nice to have; ask before adding).
-- Multiple panels. Keep the design ready for them (namespaced topics, configurable ID) but build one.
+- Building more than one panel (the integration supports several, but only one is built).
 
-## 11. Questions to ask the owner before starting
+## 11. Open questions
 
-1. Which ESP32 board and which LCD (model / controller / interface)?
-2. Which encoder hardware will be used, and will there be a dedicated Oops button?
-3. Exact entity and script IDs for Wake-up, Good night, Brighten living room, Summon the kids, and any other actions for the initial menu.
-4. Should Wi-Fi/MQTT credentials be compile-time (`menuconfig`) only, or also settable on-device?
+1. MicroMod carrier board and pin map.
+2. LCD model / controller / resolution / interface, and backlight dimming.
+
+## 12. Decision log (2026-10-10)
+
+- Board: SparkFun MicroMod ESP32. LCD still open.
+- Input: Adafruit ANO seesaw. No dedicated Oops button; undo is a dynamic menu item at the bottom of the list.
+- HA side: custom integration (taskpad pattern) instead of a YAML package. Device-side MQTT discovery is dropped.
+- Menu composition: dashboard card editor with HA entity pickers. Undo snapshots are derived automatically from the target's references, with a per-item override.
+- `undo_seconds` (relative) replaces `undo_until` (absolute).
+- Single-level undo: only the most recent operation.
+- Provisioning, adoption, and OTA follow taskpad. Taskpad modules are copied in, not shared, for now.
+- ESP-IDF v6.0. The repo holds firmware, integration, and card together.

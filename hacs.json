@@ -1,0 +1,7 @@
+{
+  "name": "Kitchen Panel",
+  "homeassistant": "2026.10.0",
+  "render_readme": true,
+  "zip_release": true,
+  "filename": "kitchen_panel.zip"
+}

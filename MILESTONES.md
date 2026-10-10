@@ -104,6 +104,14 @@ Note: `tests/card` drives the real card in jsdom against a fake backend
 (8 tests); `tests/ha` adds the websocket API (25 tests total). Not yet
 tried in a real browser against a live HA.
 
+## M4.5 — HACS packaging
+
+- [x] `hacs.json` (zip release), CI: all test suites, firmware build,
+      release zip with firmware baked in, `RELEASING.md`
+- [ ] GitHub repository (public, so HACS can install it); fill in
+      `documentation` / `issue_tracker` in the manifest
+- [ ] First tagged release installed through HACS
+
 ## M5 — Acceptance pass
 
 - [ ] Walk spec §9 criteria 1–9 on real hardware

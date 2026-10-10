@@ -220,4 +220,5 @@ None at the moment.
 - Requests use QoS 1, enqueued without blocking the UI; the MQTT outbox drops anything older than 4 s, and HA de-duplicates by `request_id`.
 - ESP-IDF v6.0. The repo holds firmware, integration, and card together.
 - Undo snapshots use `State` capture + `async_reproduce_state` rather than `scene.create` (same mechanism, no stray scene entities).
+- HACS is the supported install path for the integration (taskpad's model: tagged releases ship a zip with the matching firmware baked in).
 - The integration targets HA 2026.10+ and uses `probatio` (HA's replacement for `voluptuous` since 2026.9).

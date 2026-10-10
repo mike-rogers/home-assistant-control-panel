@@ -71,10 +71,8 @@ idf.py -B build-log -DSDKCONFIG=build-log/sdkconfig \
   -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.log" build flash monitor
 ```
 
-Firmware updates: bump `PANEL_FW_VERSION` in `main/fw_version.h`,
-`idf.py build`, `scripts/release_firmware.sh`, copy
-`custom_components/kitchen_panel/` to HA, then Install from the panel's
-device page.
+Firmware updates normally arrive with HACS releases; for local builds see
+[`RELEASING.md`](RELEASING.md).
 
 ## Tests
 
@@ -95,12 +93,18 @@ pip install -r tests/ha/requirements.txt
 (cd tests/card && npm install && npm test)
 ```
 
+## Installing the integration (HACS)
+
+HACS is the supported install path. In HA: HACS → ⋮ → Custom repositories →
+add this repository's GitHub URL as an **Integration**, install
+**Kitchen Panel**, and restart. Each release bundles the matching panel
+firmware, so after a HACS update the panels offer it on their device pages.
+See [`RELEASING.md`](RELEASING.md).
+
 ## Trying the integration before the hardware exists
 
-Copy `custom_components/kitchen_panel/` into HA's config directory, restart,
-and add **Kitchen Panel** under Settings → Devices & Services (device id
-`kitchenpanel`). Set a menu from Developer Tools → Actions with
-`kitchen_panel.set_menu`, then act as the device:
+Add **Kitchen Panel** by hand under Settings → Devices & Services (device id
+e.g. `kitchenpanel`), compose a menu in the card, then act as the device:
 
 ```sh
 mosquitto_sub -h <ha-ip> -u <user> -P <pass> -v -t 'panel/kitchenpanel/#'

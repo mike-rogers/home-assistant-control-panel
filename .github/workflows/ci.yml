@@ -17,11 +17,18 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.14"
-      - name: Unit + HA core tests
+      # Separate venvs: the HA test harness registers a pytest plugin (via
+      # entry point) whose autouse async fixtures break plain sync tests.
+      - name: Unit tests
         run: |
-          pip install -r tests/ha/requirements.txt
-          (cd tests/unit && pytest -q)
-          (cd tests/ha && pytest -q)
+          python -m venv /tmp/unit
+          /tmp/unit/bin/pip install -q -r tests/unit/requirements.txt
+          cd tests/unit && /tmp/unit/bin/pytest -q
+      - name: HA core tests
+        run: |
+          python -m venv /tmp/ha
+          /tmp/ha/bin/pip install -q -r tests/ha/requirements.txt
+          cd tests/ha && /tmp/ha/bin/pytest -q
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -40,8 +47,8 @@ jobs:
           target: esp32c3
           command: >-
             idf.py build &&
-            (cd build && esptool.py --chip esp32c3 merge_bin -o control_panel-factory.bin @flash_args) &&
-            (cd test/host && idf.py --preview set-target linux reconfigure) &&
+            (cd build && esptool --chip esp32c3 merge-bin -o control_panel-factory.bin @flash_args) &&
+            (cd test/host && env -u IDF_TARGET idf.py --preview set-target linux reconfigure) &&
             test/host/run_plain.sh
 
       - uses: actions/upload-artifact@v4

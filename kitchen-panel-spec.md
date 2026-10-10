@@ -160,9 +160,9 @@ A custom integration modeled on taskpad's, with these differences: multiple conf
 3. **State publisher.** The integration tracks every entity referenced by the menu and publishes `panel/<id>/state/<entity_id>` (retained) on change and on startup.
 4. **Dispatcher.** Python, subscribed to `panel/<id>/request`:
    - `run`: calls the item's target (`script.turn_on`, `automation.trigger`, `scene.turn_on`) and publishes `result`.
-   - For undoable items, before running: `scene.create` with `snapshot_entities`. By default the integration derives that list from what the target references, recursing through nested scripts and expanding device and area targets. The card can override it per item. Undo window: 30 s by default.
-   - `set` on a `time` item: snapshot, then `input_datetime.set_datetime`.
-   - `undo`: if the window is open and `item_id` matches the most recent operation, `scene.turn_on` the snapshot. Otherwise return an error.
+   - For undoable items, before running: capture the current `State` of the affected entities. By default the integration derives that list from what the target references (entities, devices, areas, floors, labels), recursing through nested scripts, automations and scenes, whether they're targeted or called by name. The card can override it per item. Undo window: 30 s by default.
+   - `set` on a `time` item: snapshot, then `input_datetime.set_datetime` (or `time.set_value`).
+   - `undo`: if the window is open and `item_id` matches the most recent operation, restore the snapshot with `async_reproduce_state`, which is the mechanism `scene.create`/`scene.turn_on` use internally, without leaving `scene.*` entities behind. Otherwise return an error.
 5. **Device entities.** Connectivity (binary sensor), Wi-Fi RSSI (diagnostic sensor), Last action (sensor), Firmware (update entity, served the same way as taskpad's).
 
 ## 8. Firmware structure
@@ -218,3 +218,5 @@ test/host/          — IDF linux-target Unity tests for menu/ and the UI state 
 - Single-level undo: only the most recent operation.
 - Provisioning, adoption, and OTA follow taskpad. Taskpad modules are copied in, not shared, for now.
 - ESP-IDF v6.0. The repo holds firmware, integration, and card together.
+- Undo snapshots use `State` capture + `async_reproduce_state` rather than `scene.create` (same mechanism, no stray scene entities).
+- The integration targets HA 2026.10+ and uses `probatio` (HA's replacement for `voluptuous` since 2026.9).

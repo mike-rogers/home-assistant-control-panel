@@ -1,0 +1,31 @@
+set_menu:
+  name: Set panel menu
+  description: >-
+    Replaces a panel's menu and publishes it to the device immediately.
+    Items are submenus, actions (script/automation/scene/button targets),
+    time editors (input_datetime/time) and info rows; see the integration
+    README for the item format.
+  fields:
+    config_entry_id:
+      name: Panel
+      required: true
+      selector:
+        config_entry:
+          integration: kitchen_panel
+    menu:
+      name: Menu
+      description: '{"title": "Kitchen", "items": [...]}'
+      required: true
+      selector:
+        object:
+
+get_menu:
+  name: Get panel menu
+  description: Returns a panel's stored menu, including action targets.
+  fields:
+    config_entry_id:
+      name: Panel
+      required: true
+      selector:
+        config_entry:
+          integration: kitchen_panel

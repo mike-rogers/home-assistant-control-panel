@@ -1,0 +1,20 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add a panel",
+        "description": "The device id namespaces the panel's MQTT topics (panel/<device id>/...). It must match the id the firmware uses.",
+        "data": {
+          "name": "Name",
+          "device_id": "Device id"
+        }
+      }
+    },
+    "error": {
+      "invalid_device_id": "Use lowercase letters, digits and dashes (up to 32)."
+    },
+    "abort": {
+      "already_configured": "A panel with this device id is already set up."
+    }
+  }
+}

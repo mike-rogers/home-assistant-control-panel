@@ -26,18 +26,27 @@ plain gcc under ASan/UBSan (fast; needs `idf.py reconfigure` in
 (`cd test/host && idf.py --preview set-target linux build && ./build/panel_core_host_test.elf`)
 additionally needs the `libbsd-dev` system package.
 
-## M1 — Integration core (`custom_components/kitchen_panel`)
+## M1 — Integration core (`custom_components/kitchen_panel`) (done, 2026-10-10)
 
 Testable with `mosquitto_pub`/`mosquitto_sub` before any hardware exists.
 
-- [ ] Config entry per panel (manual entry by device id for now)
-- [ ] Menu tree in `.storage`; publish retained `panel/<id>/menu` on
-      startup and on change; editing services
-- [ ] State publisher for every entity the menu references
-- [ ] Dispatcher: run / set / undo, `scene.create` snapshots derived from
-      the target's referenced entities (nested scripts, devices, areas),
-      per-item override, 30 s window, single-level undo
-- [ ] Entities: connectivity, RSSI, last action
+- [x] Config entry per panel (manual entry by device id for now)
+- [x] Menu tree in `.storage`; publish retained `panel/<id>/menu` on
+      startup and on change; `kitchen_panel.set_menu` / `get_menu` services
+- [x] State publisher for every entity the menu references (stale retained
+      topics cleared when items go away)
+- [x] Dispatcher: run / set / undo, snapshots derived from the target's
+      references (nested scripts/automations/scenes, devices, areas, floors,
+      labels), per-item override, 30 s window, single-level undo
+- [x] Entities: connectivity, RSSI, last action (+ `kitchen_panel_action`
+      bus event)
+
+Note: verified in tests only, not yet on a live HA. `tests/unit` covers the
+pure menu model and dispatcher (40 tests, Python 3.12+); `tests/ha` runs
+the integration inside HA 2026.10 core with MQTT mocked (12 tests,
+Python 3.14). The HA tests caught a real gap: HA's `referenced_entities`
+misses scripts called by name (`action: script.porch_off`), so the
+snapshot derivation also walks the action config for those.
 
 ## M2 — Firmware platform (MicroMod ESP32 + ANO, serial-only UI)
 

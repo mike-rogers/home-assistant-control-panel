@@ -8,6 +8,7 @@ wires the real implementations in.
 from __future__ import annotations
 
 import asyncio
+from collections import OrderedDict
 from collections.abc import Awaitable, Callable, Iterable
 from dataclasses import dataclass
 import json
@@ -21,6 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_UNDO_SECONDS = 30
 MESSAGE_MAX = 63  # the firmware's result message buffer
+RECENT_REQUESTS = 16  # remembered for de-duplication
 TIME_VALUE = re.compile(r"^([01]\d|2[0-3]):([0-5]\d)$")
 
 
@@ -68,6 +70,8 @@ class Dispatcher:
         self._undo: _UndoSlot | None = None
         # One request at a time, so snapshots never interleave.
         self._lock = asyncio.Lock()
+        # request_id -> result, so a QoS 1 redelivery is answered, not rerun.
+        self._recent: OrderedDict[str, dict[str, Any]] = OrderedDict()
 
     def undo_item(self) -> str | None:
         """The item that can currently be undone, if any."""
@@ -91,18 +95,29 @@ class Dispatcher:
             return None
 
         async with self._lock:
-            undo_seconds = None
-            try:
-                undo_seconds = await self._dispatch(request)
-            except RequestError as err:
-                return self._result(request_id, False, str(err), None)
-            except Exception as err:  # noqa: BLE001 - reported to the panel
-                _LOGGER.exception("Panel request %s failed", request)
-                # A run that failed partway may still be undoable.
-                return self._result(
-                    request_id, False, _message(err), self._live_window(request)
-                )
-            return self._result(request_id, True, "", undo_seconds)
+            if (cached := self._recent.get(request_id)) is not None:
+                _LOGGER.debug("Duplicate panel request %s", request_id)
+                return cached
+            result = await self._execute(request_id, request)
+            self._recent[request_id] = result
+            while len(self._recent) > RECENT_REQUESTS:
+                self._recent.popitem(last=False)
+            return result
+
+    async def _execute(
+        self, request_id: str, request: dict[str, Any]
+    ) -> dict[str, Any]:
+        try:
+            undo_seconds = await self._dispatch(request)
+        except RequestError as err:
+            return self._result(request_id, False, str(err), None)
+        except Exception as err:  # noqa: BLE001 - reported to the panel
+            _LOGGER.exception("Panel request %s failed", request)
+            # A run that failed partway may still be undoable.
+            return self._result(
+                request_id, False, _message(err), self._live_window(request)
+            )
+        return self._result(request_id, True, "", undo_seconds)
 
     def _live_window(self, request: dict[str, Any]) -> int | None:
         if request.get("op") != "undo" and self.undo_item() == request.get(

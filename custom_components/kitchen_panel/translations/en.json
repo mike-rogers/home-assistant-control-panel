@@ -1,9 +1,20 @@
 {
   "config": {
+    "flow_title": "{name}",
     "step": {
+      "adopt": {
+        "title": "Adopt Kitchen Panel",
+        "description": "Panel {device_id} found at {host}. Enter the MQTT broker details to push to it; it stores them and restarts onto your broker.",
+        "data": {
+          "name": "Name",
+          "mqtt_uri": "MQTT broker URI",
+          "mqtt_username": "MQTT username",
+          "mqtt_password": "MQTT password"
+        }
+      },
       "user": {
-        "title": "Add a panel",
-        "description": "The device id namespaces the panel's MQTT topics (panel/<device id>/...). It must match the id the firmware uses.",
+        "title": "Add a panel by device id",
+        "description": "Panels on your network are normally discovered automatically. The device id (panel-xxxxxx) is shown on the panel while it waits to be added; it namespaces the panel's MQTT topics.",
         "data": {
           "name": "Name",
           "device_id": "Device id"
@@ -11,10 +22,29 @@
       }
     },
     "error": {
+      "cannot_connect": "Could not push the configuration to the panel. Check that it is powered, on this network, and waiting to be added.",
       "invalid_device_id": "Use lowercase letters, digits and dashes (up to 32)."
     },
     "abort": {
-      "already_configured": "A panel with this device id is already set up."
+      "already_configured": "This panel is already set up. Its address was updated; use Configure to push new broker credentials.",
+      "invalid_discovery": "The discovered panel did not report a valid device id."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Adopt panel",
+        "description": "Pushes broker credentials to the panel over your LAN; it stores them and restarts. The address is filled in when the panel has been discovered.",
+        "data": {
+          "device_host": "Panel address (IP)",
+          "mqtt_uri": "MQTT broker URI",
+          "mqtt_username": "MQTT username",
+          "mqtt_password": "MQTT password"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not push the configuration to the panel. Check the address and that it is powered and on this network."
     }
   }
 }

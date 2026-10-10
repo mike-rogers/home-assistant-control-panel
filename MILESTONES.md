@@ -48,19 +48,28 @@ Python 3.14). The HA tests caught a real gap: HA's `referenced_entities`
 misses scripts called by name (`action: script.porch_off`), so the
 snapshot derivation also walks the action config for those.
 
-## M2 — Firmware platform (MicroMod ESP32 + ANO, serial-only UI)
+## M2 — Firmware platform (Pro Micro ESP32-C3 + ANO) (built, 2026-10-10)
 
-- [ ] Project skeleton for `esp32`, partition table with two OTA slots
-- [ ] Copied from taskpad: Improv BLE, Wi-Fi, adoption server
-      (`_kpanel._tcp`), OTA with rollback
-- [ ] MQTT client on the §4 contract; state/menu/result into the UI task
-- [ ] Last good menu cached in NVS
-- [ ] ANO input → logical events
-- [ ] Renderer stub that logs the view model, so M0's engine runs on the
-      device before the LCD is chosen
-- [ ] Integration: zeroconf adoption flow + firmware update entity
+- [x] Project skeleton for `esp32c3`, partition table with two OTA slots
+- [x] Copied from taskpad: Improv BLE, Wi-Fi, adoption server
+      (`_kpanel._tcp`, device id `panel-xxxxxx` from the MAC), OTA with
+      rollback
+- [x] MQTT client on the §4 contract; menu/state/result into the UI task;
+      requests enqueued non-blocking and dropped from the outbox after 4 s
+      (never late); HA de-duplicates QoS 1 redeliveries by `request_id`
+- [x] Last good menu cached in NVS and shown at boot, before Wi-Fi
+- [x] ANO input → logical events, re-probing if the wheel is unplugged
+- [x] Serial renderer (`sdkconfig.defaults.log` overlay) for running
+      without a display
+- [x] Integration: zeroconf discovery + adoption flow, options-flow
+      re-adoption, firmware update entity
 
-## M3 — Display (blocked: LCD not chosen)
+Note: compiles for esp32c3 and the integration tests pass (19 in HA core);
+not yet run on hardware. The ANO driver's init now releases the I2C bus
+on every failure path (taskpad's leaked it after the device was added,
+which only mattered once retrying was introduced).
+
+## M3 — Display (Lonely Binary ST7789 240×320, landscape)
 
 - [ ] LCD driver + `esp_lvgl_port`; LVGL renderer for the view model
 - [ ] Backlight PWM dimming behind `power/`

@@ -21,8 +21,8 @@ The primary user is the owner, but anyone in the family should be able to use it
 
 ### Hardware
 
-- ESP32 board: **SparkFun MicroMod ESP32 Processor** (classic ESP32-D0WD, 16 MB flash, no PSRAM) on a MicroMod carrier. Carrier board and pin map: **OPEN**.
-- LCD: **OPEN** (model, controller IC, resolution, interface, whether the backlight is PWM-dimmable). Keep the display layer behind an interface so the rest of the firmware is buildable and testable without it.
+- ESP32 board: **SparkFun Pro Micro ESP32-C3** (4 MB flash, ~400 KB RAM, no PSRAM): the same board as taskpad, so its pin map and RAM tuning (BLE + Wi-Fi + LVGL) carry over.
+- LCD: **Lonely Binary 2" or 2.4" TFT**, 240×320, ST7789, SPI (both sizes run the same code). Used in **landscape** (320×240), configurable in menuconfig.
 - Input: **Adafruit ANO** directional navigation + scroll wheel on its I2C seesaw adapter (product 5740, STEMMA QT, address 0x49).
 - No dedicated Oops button. Undo is an on-screen menu item (§6).
 
@@ -174,7 +174,7 @@ main/
   menu/             — JSON parse/validate, NVS persistence, tree model
   ui/               — state machine (pure C, consumes logical events) + LVGL rendering
   input/            — input event queue + drivers (ano_seesaw.c)
-  display/          — LCD driver + LVGL port (OPEN: depends on panel)
+  display/          — ST7789 driver + LVGL port
   power/            — backlight / future battery abstraction
 test/host/          — IDF linux-target Unity tests for menu/ and the UI state machine
 ```
@@ -205,18 +205,19 @@ test/host/          — IDF linux-target Unity tests for menu/ and the UI state 
 
 ## 11. Open questions
 
-1. MicroMod carrier board and pin map.
-2. LCD model / controller / resolution / interface, and backlight dimming.
+None at the moment.
 
 ## 12. Decision log (2026-10-10)
 
-- Board: SparkFun MicroMod ESP32. LCD still open.
+- Board: SparkFun Pro Micro ESP32-C3 (replacing the MicroMod ESP32). LCD: Lonely Binary 2"/2.4" ST7789 240×320, landscape.
 - Input: Adafruit ANO seesaw. No dedicated Oops button; undo is a dynamic menu item at the bottom of the list.
 - HA side: custom integration (taskpad pattern) instead of a YAML package. Device-side MQTT discovery is dropped.
 - Menu composition: dashboard card editor with HA entity pickers. Undo snapshots are derived automatically from the target's references, with a per-item override.
 - `undo_seconds` (relative) replaces `undo_until` (absolute).
 - Single-level undo: only the most recent operation.
 - Provisioning, adoption, and OTA follow taskpad. Taskpad modules are copied in, not shared, for now.
+- Device id defaults to `panel-` + the MAC's last three bytes (menuconfig can override); discovery reports it.
+- Requests use QoS 1, enqueued without blocking the UI; the MQTT outbox drops anything older than 4 s, and HA de-duplicates by `request_id`.
 - ESP-IDF v6.0. The repo holds firmware, integration, and card together.
 - Undo snapshots use `State` capture + `async_reproduce_state` rather than `scene.create` (same mechanism, no stray scene entities).
 - The integration targets HA 2026.10+ and uses `probatio` (HA's replacement for `voluptuous` since 2026.9).

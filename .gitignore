@@ -12,3 +12,4 @@ sdkconfig
 sdkconfig.old
 build-plain/
 .pytest_cache/
+build-log/

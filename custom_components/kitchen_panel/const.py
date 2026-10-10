@@ -3,6 +3,10 @@
 DOMAIN = "kitchen_panel"
 
 CONF_DEVICE_ID = "device_id"
+CONF_DEVICE_HOST = "device_host"
+CONF_MQTT_URI = "mqtt_uri"
+CONF_MQTT_USERNAME = "mqtt_username"
+CONF_MQTT_PASSWORD = "mqtt_password"
 
 STORAGE_VERSION = 1
 
@@ -15,5 +19,8 @@ SERVICE_SET_MENU = "set_menu"
 SERVICE_GET_MENU = "get_menu"
 ATTR_CONFIG_ENTRY_ID = "config_entry_id"
 ATTR_MENU = "menu"
+
+FIRMWARE_URL = "/kitchen_panel_files/firmware.bin"
+FIRMWARE_FILE = "kitchen_panel.bin"
 
 VERSION = "0.1.0"  # keep in sync with manifest.json

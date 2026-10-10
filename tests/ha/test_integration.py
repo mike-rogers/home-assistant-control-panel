@@ -1,5 +1,6 @@
 """The integration end to end inside HA core, with MQTT mocked."""
 
+import itertools
 import json
 from unittest.mock import patch
 
@@ -108,7 +109,11 @@ async def set_menu(hass, entry, menu=MENU):
     await hass.async_block_till_done()
 
 
-async def request(hass, mqtt_mock, item_id, op="run", value=None, rid="r1"):
+_ids = itertools.count(1)
+
+
+async def request(hass, mqtt_mock, item_id, op="run", value=None, rid=None):
+    rid = rid or f"auto-{next(_ids)}"  # unique, like the firmware's
     mqtt_mock.async_publish.reset_mock()
     async_fire_mqtt_message(
         hass, f"{TOPIC}/request",
@@ -224,7 +229,7 @@ async def test_goodnight_run_and_undo(hass, mqtt_mock, panel):
     await set_menu(hass, panel)
     events = async_capture_events(hass, "kitchen_panel_action")
 
-    result = await request(hass, mqtt_mock, "goodnight")
+    result = await request(hass, mqtt_mock, "goodnight", rid="r1")
     assert result == {"request_id": "r1", "status": "ok", "message": "",
                       "undo_seconds": 30}
     # The derived snapshot followed the nested script to the porch light.

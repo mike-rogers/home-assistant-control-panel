@@ -1,4 +1,5 @@
 import asyncio
+import itertools
 import json
 
 import pytest
@@ -90,14 +91,19 @@ def dispatcher(ha):
     return Dispatcher(ha.hooks())
 
 
-def send(dispatcher, item_id, op="run", value=None, request_id="r1"):
+_ids = itertools.count(1)
+
+
+def send(dispatcher, item_id, op="run", value=None, request_id=None):
+    # Unique per call, like the firmware's boot id + counter.
+    request_id = request_id or f"auto-{next(_ids)}"
     payload = json.dumps({"request_id": request_id, "item_id": item_id,
                           "op": op, "value": value})
     return asyncio.run(dispatcher.async_handle(payload))
 
 
 def test_run_with_derived_snapshot_then_undo(ha, dispatcher):
-    result = send(dispatcher, "goodnight")
+    result = send(dispatcher, "goodnight", request_id="r1")
     assert result == {"request_id": "r1", "status": "ok", "message": "",
                       "undo_seconds": 30}
     # Derived entities are de-duplicated and captured BEFORE the run.
@@ -198,7 +204,7 @@ def test_set_time_rejects_bad_values(ha, dispatcher, value):
     ],
 )
 def test_refusals(ha, dispatcher, item_id, op, message):
-    result = send(dispatcher, item_id, op=op)
+    result = send(dispatcher, item_id, op=op, request_id="r1")
     assert result == {"request_id": "r1", "status": "error",
                       "message": message, "undo_seconds": None}
 
@@ -208,3 +214,13 @@ def test_refusals(ha, dispatcher, item_id, op, message):
 )
 def test_unanswerable_payloads(dispatcher, payload):
     assert asyncio.run(dispatcher.async_handle(payload)) is None
+
+
+def test_duplicate_request_is_answered_not_rerun(ha, dispatcher):
+    # QoS 1 is at-least-once: a retransmitted request must not run twice.
+    first = send(dispatcher, "kids", request_id="dup")
+    again = send(dispatcher, "kids", request_id="dup")
+    assert again == first
+    assert ha.calls.count(("run", "script.summon_kids")) == 1
+    send(dispatcher, "kids", request_id="other")
+    assert ha.calls.count(("run", "script.summon_kids")) == 2

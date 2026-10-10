@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 from typing import Any
 
 import probatio as vol
 
 from homeassistant.components import mqtt
+from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import (
@@ -25,6 +27,8 @@ from .const import (
     ATTR_CONFIG_ENTRY_ID,
     ATTR_MENU,
     DOMAIN,
+    FIRMWARE_FILE,
+    FIRMWARE_URL,
     SERVICE_GET_MENU,
     SERVICE_SET_MENU,
     STORAGE_VERSION,
@@ -34,7 +38,7 @@ from .menu_model import MenuError
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.UPDATE]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 type PanelConfigEntry = ConfigEntry[PanelManager]
@@ -74,6 +78,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         handle_get_menu,
         schema=ENTRY_SCHEMA,
         supports_response=SupportsResponse.ONLY,
+    )
+
+    # One firmware image for every panel; each panel's update entity points
+    # its device here.
+    await hass.http.async_register_static_paths(
+        [
+            StaticPathConfig(
+                FIRMWARE_URL,
+                str(Path(__file__).parent / "firmware" / FIRMWARE_FILE),
+                cache_headers=False,
+            )
+        ]
     )
     return True
 

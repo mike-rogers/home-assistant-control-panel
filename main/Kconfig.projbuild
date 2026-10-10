@@ -1,0 +1,92 @@
+menu "Kitchen Panel Configuration"
+
+    config KPANEL_DEVICE_ID
+        string "Device id override"
+        default ""
+        help
+            Names the MQTT topics (panel/<id>/...) and the mDNS host. Empty
+            (the default) derives a unique "panel-xxxxxx" from the MAC.
+
+    config KPANEL_WIFI_SSID
+        string "Wi-Fi SSID (dev fallback)"
+        default ""
+        help
+            Normally Wi-Fi is provisioned over BLE from the Home Assistant
+            app (Improv). Fill these in only to skip that during development.
+
+    config KPANEL_WIFI_PASSWORD
+        string "Wi-Fi password (dev fallback)"
+        default ""
+
+    config KPANEL_CLOCK_24H
+        bool "Show times in 24-hour format"
+        default n
+
+    choice KPANEL_RENDERER
+        prompt "Renderer"
+        default KPANEL_RENDER_LCD
+
+        config KPANEL_RENDER_LCD
+            bool "ST7789 LCD (LVGL)"
+
+        config KPANEL_RENDER_LOG
+            bool "Serial log only (no display attached)"
+    endchoice
+
+    config KPANEL_LCD_LANDSCAPE
+        bool "Landscape (320x240); off = portrait (240x320)"
+        default y
+
+    config KPANEL_LCD_ROTATE_180
+        bool "Rotate 180 degrees (mounted upside down)"
+        default n
+
+    config KPANEL_LCD_INVERT
+        bool "Invert LCD colors (typical for IPS ST7789 panels)"
+        default y
+
+    config KPANEL_BACKLIGHT_DIM_PERCENT
+        int "Backlight level when dimmed (percent)"
+        default 10
+        range 0 100
+
+    menu "Pins (SparkFun Pro Micro ESP32-C3)"
+
+        config KPANEL_PIN_SCLK
+            int "LCD SCLK (SCL/SCK)"
+            default 6
+
+        config KPANEL_PIN_MOSI
+            int "LCD MOSI (SDA)"
+            default 7
+
+        config KPANEL_PIN_CS
+            int "LCD CS (-1 if tied low)"
+            range -1 21
+            default 10
+
+        config KPANEL_PIN_DC
+            int "LCD DC"
+            default 4
+
+        config KPANEL_PIN_RST
+            int "LCD RST (-1 if not wired)"
+            range -1 21
+            default 5
+
+        config KPANEL_PIN_BACKLIGHT
+            int "LCD backlight BLK (-1 if tied high)"
+            range -1 21
+            default 3
+
+        config KPANEL_PIN_I2C_SDA
+            int "ANO encoder I2C SDA (STEMMA QT blue)"
+            default 0
+
+        config KPANEL_PIN_I2C_SCL
+            int "ANO encoder I2C SCL (STEMMA QT yellow)"
+            default 2
+
+    endmenu
+
+endmenu

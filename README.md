@@ -17,6 +17,7 @@ actions, and handles undo ("Oops").
 | `test/host/` | Unity tests for `panel_core` |
 | `tests/unit/` | Pure-Python tests for the menu model and dispatcher |
 | `tests/ha/` | Integration tests inside HA core (MQTT mocked) |
+| `tests/card/` | Menu editor card driven in jsdom |
 
 ## Hardware
 
@@ -59,8 +60,9 @@ idf.py build flash monitor
 2. HA then discovers it ("Kitchen Panel (panel-xxxxxx)"). Adopting it asks
    for the MQTT broker details, pushes them to the panel, and the panel
    restarts onto your broker.
-3. Compose the menu with `kitchen_panel.set_menu` (the card editor arrives
-   in M4).
+3. Add the **Kitchen Panel menu** card (`type: custom:kitchen-panel-card`)
+   to a dashboard and compose the menu there; changes reach the panel
+   immediately.
 
 To run without a display (views go to the serial log):
 
@@ -88,6 +90,9 @@ pip install -r tests/unit/requirements.txt
 # Integration inside HA core (Python 3.14)
 pip install -r tests/ha/requirements.txt
 (cd tests/ha && pytest)
+
+# Menu editor card (Node 22)
+(cd tests/card && npm install && npm test)
 ```
 
 ## Trying the integration before the hardware exists

@@ -21,6 +21,7 @@ ATTR_CONFIG_ENTRY_ID = "config_entry_id"
 ATTR_MENU = "menu"
 
 FIRMWARE_URL = "/kitchen_panel_files/firmware.bin"
+CARD_URL = "/kitchen_panel_files/kitchen-panel-card.js"
 FIRMWARE_FILE = "kitchen_panel.bin"
 
 VERSION = "0.1.0"  # keep in sync with manifest.json

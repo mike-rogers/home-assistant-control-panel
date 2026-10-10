@@ -86,11 +86,23 @@ the default `-Og`). Static DRAM is 191 KB, on par with taskpad (193 KB),
 which runs Wi-Fi + BLE + LVGL on the same board. Rotation direction and
 color inversion are per-panel guesses until it's on the bench.
 
-## M4 — Menu editor card
+## M4 — Menu editor card (done, 2026-10-10)
 
-- [ ] `custom:kitchen-panel-card`: tree view, add via entity pickers,
-      submenus, reorder, per-item label/confirm/undo/step/snapshot override
-- [ ] Saves publish immediately (acceptance criterion 2)
+- [x] `custom:kitchen-panel-card` (vanilla JS, served and auto-registered
+      as a Lovelace resource by the integration): tree view, add/edit via
+      domain-filtered entity choices (friendly names, no typed ids),
+      submenus, reorder, move between lists, per-item label / undo /
+      "are you sure?" / step size
+- [x] Shows what Oops will restore (derived live by the integration), with
+      "choose these myself" to override
+- [x] Every change publishes immediately (acceptance criterion 2);
+      validation errors are shown with the form kept open
+- [x] Websocket API: panels, menu get/set (set is admin-only), snapshot
+      preview
+
+Note: `tests/card` drives the real card in jsdom against a fake backend
+(8 tests); `tests/ha` adds the websocket API (25 tests total). Not yet
+tried in a real browser against a live HA.
 
 ## M5 — Acceptance pass
 

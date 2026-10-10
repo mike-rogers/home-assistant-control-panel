@@ -26,13 +26,16 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     ATTR_CONFIG_ENTRY_ID,
     ATTR_MENU,
+    CARD_URL,
     DOMAIN,
     FIRMWARE_FILE,
     FIRMWARE_URL,
     SERVICE_GET_MENU,
     SERVICE_SET_MENU,
     STORAGE_VERSION,
+    VERSION,
 )
+from . import websocket
 from .manager import PanelManager
 from .menu_model import MenuError
 
@@ -69,6 +72,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         menu: dict[str, Any] = _manager(hass, call).menu
         return {ATTR_MENU: menu}
 
+    websocket.async_register(hass)
     hass.services.async_register(
         DOMAIN, SERVICE_SET_MENU, handle_set_menu, schema=SET_MENU_SCHEMA
     )
@@ -88,10 +92,59 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 FIRMWARE_URL,
                 str(Path(__file__).parent / "firmware" / FIRMWARE_FILE),
                 cache_headers=False,
-            )
+            ),
+            StaticPathConfig(
+                CARD_URL,
+                str(Path(__file__).parent / "frontend" / "kitchen-panel-card.js"),
+                cache_headers=False,
+            ),
         ]
     )
+    await _async_ensure_lovelace_resource(hass)
     return True
+
+
+async def _async_ensure_lovelace_resource(hass: HomeAssistant) -> None:
+    """Register the card in the Lovelace resource registry (as taskpad).
+
+    Resources are awaited by the frontend before cards render; a script
+    injected with add_extra_js_url is not, and a custom card element that
+    registers after first render never recovers.
+    """
+    versioned_url = f"{CARD_URL}?v={VERSION}"
+    try:
+        resources = getattr(hass.data.get("lovelace"), "resources", None)
+        if resources is None:
+            _LOGGER.warning(
+                "Lovelace resources unavailable (YAML-mode dashboards?); "
+                "add %s as a module resource manually",
+                versioned_url,
+            )
+            return
+        if hasattr(resources, "loaded") and not resources.loaded:
+            await resources.async_load()
+        existing = next(
+            (
+                item
+                for item in resources.async_items()
+                if str(item.get("url", "")).split("?")[0] == CARD_URL
+            ),
+            None,
+        )
+        if existing is None:
+            await resources.async_create_item(
+                {"res_type": "module", "url": versioned_url}
+            )
+        elif existing["url"] != versioned_url:
+            await resources.async_update_item(
+                existing["id"], {"res_type": "module", "url": versioned_url}
+            )
+    except Exception:  # noqa: BLE001 - card plumbing must never block setup
+        _LOGGER.exception(
+            "Could not register the Lovelace resource; add %s as a module "
+            "resource manually (Settings > Dashboards > Resources)",
+            versioned_url,
+        )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PanelConfigEntry) -> bool:

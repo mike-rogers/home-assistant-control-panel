@@ -548,7 +548,10 @@ static void item_preview(const ui_sm_t *sm, const menu_item_t *item,
         return;
     }
     if (state->unit[0] != '\0') {
-        snprintf(buf, len, "%s %s", state->state, state->unit);
+        // Long values are clipped to the row's value column on purpose.
+        char full[ENTITY_STATE_LEN + ENTITY_UNIT_LEN + 1];
+        snprintf(full, sizeof(full), "%s %s", state->state, state->unit);
+        strlcpy(buf, full, len);
     } else {
         strlcpy(buf, state->state, len);
     }

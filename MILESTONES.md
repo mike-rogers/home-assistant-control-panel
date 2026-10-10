@@ -69,11 +69,22 @@ not yet run on hardware. The ANO driver's init now releases the I2C bus
 on every failure path (taskpad's leaked it after the device was added,
 which only mattered once retrying was introduced).
 
-## M3 — Display (Lonely Binary ST7789 240×320, landscape)
+## M3 — Display (Lonely Binary ST7789 240×320, landscape) (built, 2026-10-10)
 
-- [ ] LCD driver + `esp_lvgl_port`; LVGL renderer for the view model
-- [ ] Backlight PWM dimming behind `power/`
-- [ ] Response-time check against the 50 ms target
+- [x] ST7789 + `esp_lvgl_port` bring-up (taskpad's, known-good on this
+      board); landscape via LVGL rotation, 180° and portrait in menuconfig
+- [x] LVGL renderer for the view model: header with breadcrumb and
+      connectivity, scrolling rows with value previews, amber Oops row,
+      big time editor, No/Yes confirm, toast, usage hints in the footer
+- [x] Objects created once and updated in place, so a wheel step redraws
+      a couple of rows, not the whole frame
+- [x] Backlight PWM dimming behind `backlight.h` (the power abstraction)
+- [ ] Response-time check against the 50 ms target (on hardware)
+
+Note: the image is 1.69 MB with `-Os` (13% OTA-slot headroom; it was 4% at
+the default `-Og`). Static DRAM is 191 KB, on par with taskpad (193 KB),
+which runs Wi-Fi + BLE + LVGL on the same board. Rotation direction and
+color inversion are per-panel guesses until it's on the bench.
 
 ## M4 — Menu editor card
 

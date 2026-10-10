@@ -1,4 +1,4 @@
-# Releasing Kitchen Panel
+# Releasing Control Panel
 
 HACS is the supported way to install the integration. A release ships the
 integration **with the matching firmware baked in**, so updating through
@@ -8,8 +8,8 @@ HACS also offers the new firmware on every panel's device page.
 
 1. Bump the versions that changed:
    - firmware: `PANEL_FW_VERSION` in `main/fw_version.h`
-   - integration: `version` in `custom_components/kitchen_panel/manifest.json`
-     **and** `VERSION` in `custom_components/kitchen_panel/const.py` (they
+   - integration: `version` in `custom_components/control_panel/manifest.json`
+     **and** `VERSION` in `custom_components/control_panel/const.py` (they
      must match: the versioned Lovelace resource URL busts card caches)
    - card: `CARD_VERSION` in the card JS (only shown in the browser console)
 2. Commit, tag and push:
@@ -21,19 +21,19 @@ HACS also offers the new firmware on every panel's device page.
 
 3. CI (`.github/workflows/ci.yml`) runs all test suites, builds the
    firmware with ESP-IDF v6.0, and attaches to the GitHub release:
-   - `kitchen_panel.zip`: the integration plus firmware; HACS installs this
-   - `kitchen_panel.bin`: the OTA image
-   - `kitchen_panel-factory.bin`: full-flash image for a fresh board
-4. In HA: HACS → Kitchen Panel → update, restart, then **Install** on each
+   - `control_panel.zip`: the integration plus firmware; HACS installs this
+   - `control_panel.bin`: the OTA image
+   - `control_panel-factory.bin`: full-flash image for a fresh board
+4. In HA: HACS → Control Panel → update, restart, then **Install** on each
    panel's Firmware entity. The panel pulls the image, flashes its idle OTA
    slot and reboots; a boot that never reaches MQTT rolls back on its own.
 
 ## Local builds (no release)
 
 1. `idf.py build`
-2. `scripts/release_firmware.sh`: stages `kitchen_panel.bin` and
-   `version.txt` into `custom_components/kitchen_panel/firmware/`
-3. Copy `custom_components/kitchen_panel/` over the HACS-installed copy in
+2. `scripts/release_firmware.sh`: stages `control_panel.bin` and
+   `version.txt` into `custom_components/control_panel/firmware/`
+3. Copy `custom_components/control_panel/` over the HACS-installed copy in
    HA's config directory (plain `cp`; Finder copies fail on the Samba
    share), restart HA, then Install from the panel's device page. The
    firmware entity polls about every 15 minutes; force it with

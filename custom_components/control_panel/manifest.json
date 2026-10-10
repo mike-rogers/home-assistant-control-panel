@@ -1,6 +1,6 @@
 {
-  "domain": "kitchen_panel",
-  "name": "Kitchen Panel",
+  "domain": "control_panel",
+  "name": "Control Panel",
   "after_dependencies": [
     "automation",
     "frontend",
@@ -17,11 +17,13 @@
     "mqtt",
     "websocket_api"
   ],
+  "documentation": "https://github.com/mike-rogers/home-assistant-control-panel",
   "integration_type": "device",
   "iot_class": "local_push",
+  "issue_tracker": "https://github.com/mike-rogers/home-assistant-control-panel/issues",
   "requirements": [],
   "version": "0.1.0",
   "zeroconf": [
-    "_kpanel._tcp.local."
+    "_ctlpanel._tcp.local."
   ]
 }

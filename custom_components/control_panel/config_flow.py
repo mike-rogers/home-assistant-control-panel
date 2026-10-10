@@ -1,6 +1,6 @@
 """Config flow: one entry per panel, keyed by its device id.
 
-A factory-fresh panel advertises _kpanel._tcp over mDNS; HA offers it as
+A factory-fresh panel advertises _ctlpanel._tcp over mDNS; HA offers it as
 discovered, and adopting it pushes the broker credentials to the panel
 (which reboots onto the broker), as in taskpad. A panel can also be added
 by hand (by device id) and adopted later from its options.
@@ -37,7 +37,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 DEVICE_ID = vol.Match(r"^[a-z0-9][a-z0-9-]{0,31}$")
-DEFAULT_NAME = "Kitchen Panel"
+DEFAULT_NAME = "Control Panel"
 
 
 def _guess_mqtt_uri(hass: HomeAssistant) -> str:
@@ -93,7 +93,7 @@ async def _async_try_push(
     return True
 
 
-class KitchenPanelConfigFlow(ConfigFlow, domain=DOMAIN):
+class ControlPanelConfigFlow(ConfigFlow, domain=DOMAIN):
     """Add a panel: discovered (adopt) or by hand."""
 
     VERSION = 1

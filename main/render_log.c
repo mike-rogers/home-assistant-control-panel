@@ -1,5 +1,5 @@
 // Serial renderer: logs each view. Stands in for the LCD until M3, and
-// stays available (CONFIG_KPANEL_RENDER_LOG) for debugging without a panel.
+// stays available (CONFIG_CTLPANEL_RENDER_LOG) for debugging without a panel.
 
 #include <stdio.h>
 

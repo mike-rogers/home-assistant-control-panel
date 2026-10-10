@@ -2,7 +2,7 @@ import copy
 
 import pytest
 
-from kitchen_panel.menu_model import (
+from control_panel.menu_model import (
     MAX_LIST,
     MenuError,
     find_item,

@@ -1,4 +1,4 @@
-"""The Kitchen Panel integration: HA side of an MQTT menu panel (spec §7)."""
+"""The Control Panel integration: HA side of an MQTT menu panel (spec §7)."""
 
 from __future__ import annotations
 
@@ -53,7 +53,7 @@ SET_MENU_SCHEMA = ENTRY_SCHEMA.extend({vol.Required(ATTR_MENU): dict})
 def _manager(hass: HomeAssistant, call: ServiceCall) -> PanelManager:
     entry = hass.config_entries.async_get_entry(call.data[ATTR_CONFIG_ENTRY_ID])
     if entry is None or entry.domain != DOMAIN:
-        raise ServiceValidationError("Not a Kitchen Panel config entry")
+        raise ServiceValidationError("Not a Control Panel config entry")
     if entry.state is not ConfigEntryState.LOADED:
         raise ServiceValidationError(f"{entry.title} is not loaded")
     return entry.runtime_data
@@ -95,7 +95,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             ),
             StaticPathConfig(
                 CARD_URL,
-                str(Path(__file__).parent / "frontend" / "kitchen-panel-card.js"),
+                str(Path(__file__).parent / "frontend" / "control-panel-card.js"),
                 cache_headers=False,
             ),
         ]

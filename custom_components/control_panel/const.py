@@ -1,6 +1,6 @@
-"""Constants for the Kitchen Panel integration."""
+"""Constants for the Control Panel integration."""
 
-DOMAIN = "kitchen_panel"
+DOMAIN = "control_panel"
 
 CONF_DEVICE_ID = "device_id"
 CONF_DEVICE_HOST = "device_host"
@@ -12,16 +12,16 @@ STORAGE_VERSION = 1
 
 TOPIC_ROOT = "panel"
 
-EVENT_ACTION = "kitchen_panel_action"
-SIGNAL_LAST_ACTION = "kitchen_panel_last_action_{}"
+EVENT_ACTION = "control_panel_action"
+SIGNAL_LAST_ACTION = "control_panel_last_action_{}"
 
 SERVICE_SET_MENU = "set_menu"
 SERVICE_GET_MENU = "get_menu"
 ATTR_CONFIG_ENTRY_ID = "config_entry_id"
 ATTR_MENU = "menu"
 
-FIRMWARE_URL = "/kitchen_panel_files/firmware.bin"
-CARD_URL = "/kitchen_panel_files/kitchen-panel-card.js"
-FIRMWARE_FILE = "kitchen_panel.bin"
+FIRMWARE_URL = "/control_panel_files/firmware.bin"
+CARD_URL = "/control_panel_files/control-panel-card.js"
+FIRMWARE_FILE = "control_panel.bin"
 
 VERSION = "0.1.0"  # keep in sync with manifest.json

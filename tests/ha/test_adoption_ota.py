@@ -15,10 +15,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from custom_components.kitchen_panel import update as update_module
-from custom_components.kitchen_panel.const import DOMAIN
+from custom_components.control_panel import update as update_module
+from custom_components.control_panel.const import DOMAIN
 
-PUSH = "custom_components.kitchen_panel.config_flow.async_push_config"
+PUSH = "custom_components.control_panel.config_flow.async_push_config"
 BROKER = {
     "mqtt_uri": "mqtt://10.0.0.2:1883",
     "mqtt_username": "panel",
@@ -32,8 +32,8 @@ def discovery(device_id="panel-a1b2c3", host="10.0.0.50"):
         ip_addresses=[ip_address(host)],
         port=80,
         hostname=f"{device_id}.local.",
-        type="_kpanel._tcp.local.",
-        name=f"Kitchen Panel._kpanel._tcp.local.",
+        type="_ctlpanel._tcp.local.",
+        name=f"Control Panel._ctlpanel._tcp.local.",
         properties={"id": device_id, "version": "0.1.0", "provisioned": "0"},
     )
 
@@ -51,7 +51,7 @@ async def test_discovered_panel_is_adopted(hass: HomeAssistant, mqtt_mock):
 
     with (
         patch(PUSH, new=AsyncMock()) as push,
-        patch("custom_components.kitchen_panel.async_setup_entry",
+        patch("custom_components.control_panel.async_setup_entry",
               return_value=True),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -113,17 +113,17 @@ async def test_options_flow_readopts(hass: HomeAssistant, mqtt_mock):
 
 # ---- Firmware update entity ----
 
-FIRMWARE = "update.kitchen_panel_firmware"
+FIRMWARE = "update.control_panel_firmware"
 
 
 @pytest.fixture
 async def panel(hass: HomeAssistant, mqtt_mock, tmp_path):
     (tmp_path / "version.txt").write_text("0.2.0")
-    (tmp_path / "kitchen_panel.bin").write_bytes(b"\0" * 16)
+    (tmp_path / "control_panel.bin").write_bytes(b"\0" * 16)
     hass.config.api = Mock(local_ip="10.0.0.2", port=8123)
     entry = MockConfigEntry(
-        domain=DOMAIN, title="Kitchen Panel", unique_id="kitchenpanel",
-        data={"device_id": "kitchenpanel"},
+        domain=DOMAIN, title="Control Panel", unique_id="testpanel",
+        data={"device_id": "testpanel"},
     )
     entry.add_to_hass(hass)
     with patch.object(update_module, "FIRMWARE_DIR", tmp_path):
@@ -133,7 +133,7 @@ async def panel(hass: HomeAssistant, mqtt_mock, tmp_path):
 
 
 async def test_update_offered_and_installed(hass, mqtt_mock, panel):
-    async_fire_mqtt_message(hass, "panel/kitchenpanel/status",
+    async_fire_mqtt_message(hass, "panel/testpanel/status",
                             '{"version":"0.1.0","rssi":-50}')
     await hass.async_block_till_done()
     state = hass.states.get(FIRMWARE)
@@ -146,10 +146,10 @@ async def test_update_offered_and_installed(hass, mqtt_mock, panel):
         "update", "install", {"entity_id": FIRMWARE}, blocking=True
     )
     ota = [c for c in mqtt_mock.async_publish.call_args_list
-           if c.args[0] == "panel/kitchenpanel/ota"]
+           if c.args[0] == "panel/testpanel/ota"]
     assert len(ota) == 1
     assert json.loads(ota[0].args[1]) == {
-        "url": "http://10.0.0.2:8123/kitchen_panel_files/firmware.bin"
+        "url": "http://10.0.0.2:8123/control_panel_files/firmware.bin"
     }
 
 

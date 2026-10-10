@@ -65,8 +65,8 @@ static void input_task(void *arg)
     bool warned = false;
     for (;;) {
         if (!have_ano) {
-            have_ano = ano_seesaw_init(CONFIG_KPANEL_PIN_I2C_SDA,
-                                       CONFIG_KPANEL_PIN_I2C_SCL);
+            have_ano = ano_seesaw_init(CONFIG_CTLPANEL_PIN_I2C_SDA,
+                                       CONFIG_CTLPANEL_PIN_I2C_SCL);
             if (!have_ano) {
                 if (!warned) {
                     ui_task_status("Wheel not found - check its cable");

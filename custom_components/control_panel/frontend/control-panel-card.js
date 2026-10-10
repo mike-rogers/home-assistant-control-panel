@@ -1,6 +1,6 @@
-/* Kitchen Panel card: compose a panel's menu.
- * Served by the kitchen_panel integration; no build step, no dependencies.
- * Usage in a dashboard:  type: custom:kitchen-panel-card
+/* Control Panel card: compose a panel's menu.
+ * Served by the control_panel integration; no build step, no dependencies.
+ * Usage in a dashboard:  type: custom:control-panel-card
  *                        entry_id: <optional; defaults to the first panel>
  *
  * Every change is validated and published by the integration immediately,
@@ -8,7 +8,7 @@
  */
 
 const CARD_VERSION = "0.1.0";
-console.info(`[kitchen-panel-card] v${CARD_VERSION}`);
+console.info(`[control-panel-card] v${CARD_VERSION}`);
 
 const MAX_DEPTH = 3;
 const ACTION_DOMAINS = ["script", "automation", "scene", "button"];
@@ -83,7 +83,7 @@ function locations(menu) {
   return out;
 }
 
-class KitchenPanelCard extends HTMLElement {
+class ControlPanelCard extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
@@ -120,13 +120,13 @@ class KitchenPanelCard extends HTMLElement {
 
   async _load() {
     try {
-      this._panels = await this._hass.callWS({ type: "kitchen_panel/panels" });
+      this._panels = await this._hass.callWS({ type: "control_panel/panels" });
       if (!this._entryId && this._panels.length) {
         this._entryId = this._panels[0].entry_id;
       }
       if (this._entryId) {
         const res = await this._hass.callWS({
-          type: "kitchen_panel/menu/get", entry_id: this._entryId,
+          type: "control_panel/menu/get", entry_id: this._entryId,
         });
         this._menu = res.menu;
       }
@@ -141,7 +141,7 @@ class KitchenPanelCard extends HTMLElement {
   async _commit(menu) {
     try {
       const res = await this._hass.callWS({
-        type: "kitchen_panel/menu/set", entry_id: this._entryId, menu,
+        type: "control_panel/menu/set", entry_id: this._entryId, menu,
       });
       this._menu = res.menu;
       this._error = "";
@@ -162,7 +162,7 @@ class KitchenPanelCard extends HTMLElement {
     this._derived = { target, entities: null };
     try {
       const res = await this._hass.callWS({
-        type: "kitchen_panel/snapshot/derive", target,
+        type: "control_panel/snapshot/derive", target,
       });
       if (this._derived && this._derived.target === target) {
         this._derived.entities = res.entities;
@@ -504,7 +504,7 @@ class KitchenPanelCard extends HTMLElement {
     if (this._panels === null) {
       body = `<div class="empty">Loading…</div>`;
     } else if (!this._panels.length) {
-      body = `<div class="empty">No Kitchen Panel is set up yet. Add one under Settings → Devices &amp; services.</div>`;
+      body = `<div class="empty">No Control Panel is set up yet. Add one under Settings → Devices &amp; services.</div>`;
     } else if (!this._menu) {
       body = `<div class="empty">This panel isn't loaded.</div>`;
     } else {
@@ -557,7 +557,7 @@ class KitchenPanelCard extends HTMLElement {
         .buttons { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
       </style>
       <ha-card>
-        <h2>${esc(this._config?.title || panel?.title || "Kitchen Panel")} menu</h2>
+        <h2>${esc(this._config?.title || panel?.title || "Control Panel")} menu</h2>
         ${this._error ? `<div class="error">${esc(this._error)}</div>` : ""}
         ${body}
       </ha-card>`;
@@ -602,14 +602,14 @@ class KitchenPanelCard extends HTMLElement {
   }
 }
 
-if (!customElements.get("kitchen-panel-card")) {
-  customElements.define("kitchen-panel-card", KitchenPanelCard);
+if (!customElements.get("control-panel-card")) {
+  customElements.define("control-panel-card", ControlPanelCard);
 }
 window.customCards = window.customCards || [];
-if (!window.customCards.some((c) => c.type === "kitchen-panel-card")) {
+if (!window.customCards.some((c) => c.type === "control-panel-card")) {
   window.customCards.push({
-    type: "kitchen-panel-card",
-    name: "Kitchen Panel menu",
-    description: "Compose what a Kitchen Panel's menu shows and runs.",
+    type: "control-panel-card",
+    name: "Control Panel menu",
+    description: "Compose what a Control Panel's menu shows and runs.",
   });
 }

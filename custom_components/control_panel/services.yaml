@@ -11,7 +11,7 @@ set_menu:
       required: true
       selector:
         config_entry:
-          integration: kitchen_panel
+          integration: control_panel
     menu:
       name: Menu
       description: '{"title": "Kitchen", "items": [...]}'
@@ -28,4 +28,4 @@ get_menu:
       required: true
       selector:
         config_entry:
-          integration: kitchen_panel
+          integration: control_panel

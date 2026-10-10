@@ -38,7 +38,7 @@ def _manager(
     return entry.runtime_data
 
 
-@websocket_api.websocket_command({vol.Required("type"): "kitchen_panel/panels"})
+@websocket_api.websocket_command({vol.Required("type"): "control_panel/panels"})
 @callback
 def ws_panels(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
@@ -58,7 +58,7 @@ def ws_panels(
 
 
 @websocket_api.websocket_command(
-    {vol.Required("type"): "kitchen_panel/menu/get", vol.Required("entry_id"): str}
+    {vol.Required("type"): "control_panel/menu/get", vol.Required("entry_id"): str}
 )
 @callback
 def ws_get_menu(
@@ -70,7 +70,7 @@ def ws_get_menu(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "kitchen_panel/menu/set",
+        vol.Required("type"): "control_panel/menu/set",
         vol.Required("entry_id"): str,
         vol.Required("menu"): dict,
     }
@@ -92,7 +92,7 @@ async def ws_set_menu(
 
 
 @websocket_api.websocket_command(
-    {vol.Required("type"): "kitchen_panel/snapshot/derive", vol.Required("target"): str}
+    {vol.Required("type"): "control_panel/snapshot/derive", vol.Required("target"): str}
 )
 @callback
 def ws_derive_snapshot(

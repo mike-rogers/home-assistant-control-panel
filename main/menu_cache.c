@@ -8,7 +8,7 @@
 
 static const char *TAG = "menu_cache";
 
-#define NAMESPACE "kpanel_menu"
+#define NAMESPACE "ctlpanel_menu"
 #define KEY "menu"
 #define MAX_BYTES 8192 // a dozen-item menu is ~2 KB; NVS is 24 KB in total
 

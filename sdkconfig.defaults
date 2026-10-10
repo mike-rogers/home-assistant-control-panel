@@ -1,4 +1,4 @@
-# Kitchen Panel build defaults
+# Control Panel build defaults
 # SparkFun Pro Micro ESP32-C3, 4MB flash: dual 1984KB OTA app slots
 CONFIG_IDF_TARGET="esp32c3"
 CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y

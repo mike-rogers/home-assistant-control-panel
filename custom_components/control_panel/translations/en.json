@@ -3,7 +3,7 @@
     "flow_title": "{name}",
     "step": {
       "adopt": {
-        "title": "Adopt Kitchen Panel",
+        "title": "Adopt Control Panel",
         "description": "Panel {device_id} found at {host}. Enter the MQTT broker details to push to it; it stores them and restarts onto your broker.",
         "data": {
           "name": "Name",

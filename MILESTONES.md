@@ -1,8 +1,8 @@
-# Kitchen Panel Milestones
+# Control Panel Milestones
 
 Each milestone leaves the whole system working end-to-end before the next
 begins. Requirements and the decision log live in
-[`kitchen-panel-spec.md`](kitchen-panel-spec.md).
+[`control-panel-spec.md`](control-panel-spec.md).
 
 ## M0 — Core engine, host-tested (done, 2026-10-10)
 
@@ -26,19 +26,19 @@ plain gcc under ASan/UBSan (fast; needs `idf.py reconfigure` in
 (`cd test/host && idf.py --preview set-target linux build && ./build/panel_core_host_test.elf`)
 additionally needs the `libbsd-dev` system package.
 
-## M1 — Integration core (`custom_components/kitchen_panel`) (done, 2026-10-10)
+## M1 — Integration core (`custom_components/control_panel`) (done, 2026-10-10)
 
 Testable with `mosquitto_pub`/`mosquitto_sub` before any hardware exists.
 
 - [x] Config entry per panel (manual entry by device id for now)
 - [x] Menu tree in `.storage`; publish retained `panel/<id>/menu` on
-      startup and on change; `kitchen_panel.set_menu` / `get_menu` services
+      startup and on change; `control_panel.set_menu` / `get_menu` services
 - [x] State publisher for every entity the menu references (stale retained
       topics cleared when items go away)
 - [x] Dispatcher: run / set / undo, snapshots derived from the target's
       references (nested scripts/automations/scenes, devices, areas, floors,
       labels), per-item override, 30 s window, single-level undo
-- [x] Entities: connectivity, RSSI, last action (+ `kitchen_panel_action`
+- [x] Entities: connectivity, RSSI, last action (+ `control_panel_action`
       bus event)
 
 Note: verified in tests only, not yet on a live HA. `tests/unit` covers the
@@ -52,7 +52,7 @@ snapshot derivation also walks the action config for those.
 
 - [x] Project skeleton for `esp32c3`, partition table with two OTA slots
 - [x] Copied from taskpad: Improv BLE, Wi-Fi, adoption server
-      (`_kpanel._tcp`, device id `panel-xxxxxx` from the MAC), OTA with
+      (`_ctlpanel._tcp`, device id `panel-xxxxxx` from the MAC), OTA with
       rollback
 - [x] MQTT client on the §4 contract; menu/state/result into the UI task;
       requests enqueued non-blocking and dropped from the outbox after 4 s
@@ -88,7 +88,7 @@ color inversion are per-panel guesses until it's on the bench.
 
 ## M4 — Menu editor card (done, 2026-10-10)
 
-- [x] `custom:kitchen-panel-card` (vanilla JS, served and auto-registered
+- [x] `custom:control-panel-card` (vanilla JS, served and auto-registered
       as a Lovelace resource by the integration): tree view, add/edit via
       domain-filtered entity choices (friendly names, no typed ids),
       submenus, reorder, move between lists, per-item label / undo /
@@ -108,8 +108,8 @@ tried in a real browser against a live HA.
 
 - [x] `hacs.json` (zip release), CI: all test suites, firmware build,
       release zip with firmware baked in, `RELEASING.md`
-- [ ] GitHub repository (public, so HACS can install it); fill in
-      `documentation` / `issue_tracker` in the manifest
+- [x] GitHub repository (public, so HACS can install it):
+      `mike-rogers/home-assistant-control-panel`; MIT license
 - [ ] First tagged release installed through HACS
 
 ## M5 — Acceptance pass

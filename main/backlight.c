@@ -8,13 +8,13 @@ static const char *TAG = "backlight";
 #define LEDC_RES LEDC_TIMER_10_BIT
 #define LEDC_MAX ((1 << 10) - 1)
 
-#if CONFIG_KPANEL_PIN_BACKLIGHT >= 0
+#if CONFIG_CTLPANEL_PIN_BACKLIGHT >= 0
 static bool s_ready;
 #endif
 
 void backlight_init(void)
 {
-#if CONFIG_KPANEL_PIN_BACKLIGHT >= 0
+#if CONFIG_CTLPANEL_PIN_BACKLIGHT >= 0
     const ledc_timer_config_t timer = {
         .speed_mode = LEDC_LOW_SPEED_MODE,
         .duty_resolution = LEDC_RES,
@@ -23,7 +23,7 @@ void backlight_init(void)
         .clk_cfg = LEDC_AUTO_CLK,
     };
     const ledc_channel_config_t channel = {
-        .gpio_num = CONFIG_KPANEL_PIN_BACKLIGHT,
+        .gpio_num = CONFIG_CTLPANEL_PIN_BACKLIGHT,
         .speed_mode = LEDC_LOW_SPEED_MODE,
         .channel = LEDC_CHANNEL_0,
         .timer_sel = LEDC_TIMER_0,
@@ -40,7 +40,7 @@ void backlight_init(void)
 
 void backlight_set(uint8_t percent)
 {
-#if CONFIG_KPANEL_PIN_BACKLIGHT >= 0
+#if CONFIG_CTLPANEL_PIN_BACKLIGHT >= 0
     if (!s_ready) {
         return;
     }

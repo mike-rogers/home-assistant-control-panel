@@ -10,7 +10,7 @@ set(srcs "main.c"
          "adopt_server.c"
          "ota_update.c")
 
-if(CONFIG_KPANEL_RENDER_LOG)
+if(CONFIG_CTLPANEL_RENDER_LOG)
     list(APPEND srcs "render_log.c")
 else()
     list(APPEND srcs "render_lcd.c" "backlight.c")

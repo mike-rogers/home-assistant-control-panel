@@ -17,9 +17,9 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
 
-from custom_components.kitchen_panel.const import DOMAIN
+from custom_components.control_panel.const import DOMAIN
 
-TOPIC = "panel/kitchenpanel"
+TOPIC = "panel/testpanel"
 WAKE = "input_datetime.house_wakeup_time"
 
 MENU = {
@@ -81,9 +81,9 @@ async def house(hass: HomeAssistant):
 async def panel(hass: HomeAssistant, mqtt_mock, house):
     entry = MockConfigEntry(
         domain=DOMAIN,
-        title="Kitchen Panel",
-        unique_id="kitchenpanel",
-        data={"device_id": "kitchenpanel"},
+        title="Control Panel",
+        unique_id="testpanel",
+        data={"device_id": "testpanel"},
     )
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
@@ -141,7 +141,7 @@ async def test_config_flow(hass: HomeAssistant, mqtt_mock):
     )
     assert result["errors"] == {"device_id": "invalid_device_id"}
 
-    with patch("custom_components.kitchen_panel.async_setup_entry",
+    with patch("custom_components.control_panel.async_setup_entry",
                return_value=True):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"name": "Kitchen", "device_id": "panel-a1b2c3"}
@@ -164,7 +164,7 @@ async def test_config_flow(hass: HomeAssistant, mqtt_mock):
 async def test_setup_publishes_empty_menu(hass, mqtt_mock, panel):
     [(payload, retain)] = published(mqtt_mock, f"{TOPIC}/menu")
     assert retain is True
-    assert json.loads(payload) == {"schema": 1, "title": "Kitchen Panel",
+    assert json.loads(payload) == {"schema": 1, "title": "Control Panel",
                                    "items": []}
 
 
@@ -227,7 +227,7 @@ async def test_state_changes_are_republished_and_stale_cleared(
 
 async def test_goodnight_run_and_undo(hass, mqtt_mock, panel):
     await set_menu(hass, panel)
-    events = async_capture_events(hass, "kitchen_panel_action")
+    events = async_capture_events(hass, "control_panel_action")
 
     result = await request(hass, mqtt_mock, "goodnight", rid="r1")
     assert result == {"request_id": "r1", "status": "ok", "message": "",
@@ -236,7 +236,7 @@ async def test_goodnight_run_and_undo(hass, mqtt_mock, panel):
     assert hass.states.get("input_boolean.kitchen_light").state == "off"
     assert hass.states.get("input_boolean.porch_light").state == "off"
     assert events[0].data["item_id"] == "goodnight"
-    assert hass.states.get("sensor.kitchen_panel_last_action").state == (
+    assert hass.states.get("sensor.control_panel_last_action").state == (
         "Good night"
     )
 
@@ -269,8 +269,8 @@ async def test_missing_target_is_reported(hass, mqtt_mock, panel):
 # ---- Device entities ----
 
 async def test_connectivity_and_rssi(hass, mqtt_mock, panel):
-    connectivity = "binary_sensor.kitchen_panel_connectivity"
-    rssi = "sensor.kitchen_panel_wi_fi_signal"
+    connectivity = "binary_sensor.control_panel_connectivity"
+    rssi = "sensor.control_panel_wi_fi_signal"
     assert hass.states.get(connectivity).state == "off"
 
     async_fire_mqtt_message(hass, f"{TOPIC}/availability", "online")

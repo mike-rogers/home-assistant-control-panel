@@ -1,4 +1,4 @@
-// Drives the real kitchen-panel-card in jsdom against a fake hass whose
+// Drives the real control-panel-card in jsdom against a fake hass whose
 // websocket backend stores the menu like the integration does.
 //   cd tests/card && npm install && npm test
 
@@ -8,7 +8,7 @@ import { readFileSync } from "node:fs";
 import { JSDOM } from "jsdom";
 
 const CARD = readFileSync(
-  new URL("../../custom_components/kitchen_panel/frontend/kitchen-panel-card.js",
+  new URL("../../custom_components/control_panel/frontend/control-panel-card.js",
           import.meta.url), "utf8");
 
 const STATES = {
@@ -34,11 +34,11 @@ function setup(initialMenu = { title: "Kitchen", items: [] }) {
       [id, { entity_id: id, state: "on", attributes }])),
     async callWS(msg) {
       switch (msg.type) {
-        case "kitchen_panel/panels":
-          return [{ entry_id: "e1", title: "Kitchen Panel", device_id: "panel-1" }];
-        case "kitchen_panel/menu/get":
+        case "control_panel/panels":
+          return [{ entry_id: "e1", title: "Control Panel", device_id: "panel-1" }];
+        case "control_panel/menu/get":
           return { menu: structuredClone(backend.menu) };
-        case "kitchen_panel/menu/set":
+        case "control_panel/menu/set":
           if (backend.failNext) {
             const message = backend.failNext;
             backend.failNext = null;
@@ -47,7 +47,7 @@ function setup(initialMenu = { title: "Kitchen", items: [] }) {
           backend.sets.push(structuredClone(msg.menu));
           backend.menu = structuredClone(msg.menu);
           return { menu: structuredClone(backend.menu) };
-        case "kitchen_panel/snapshot/derive":
+        case "control_panel/snapshot/derive":
           return { entities: msg.target === "script.good_night"
             ? [{ entity_id: "light.kitchen", name: "Kitchen light" }] : [] };
       }
@@ -55,7 +55,7 @@ function setup(initialMenu = { title: "Kitchen", items: [] }) {
     },
   };
 
-  const card = window.document.createElement("kitchen-panel-card");
+  const card = window.document.createElement("control-panel-card");
   window.document.body.appendChild(card);
   card.setConfig({});
   card.hass = hass;

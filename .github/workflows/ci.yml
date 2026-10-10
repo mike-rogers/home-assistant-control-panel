@@ -40,7 +40,7 @@ jobs:
           target: esp32c3
           command: >-
             idf.py build &&
-            (cd build && esptool.py --chip esp32c3 merge_bin -o kitchen_panel-factory.bin @flash_args) &&
+            (cd build && esptool.py --chip esp32c3 merge_bin -o control_panel-factory.bin @flash_args) &&
             (cd test/host && idf.py --preview set-target linux reconfigure) &&
             test/host/run_plain.sh
 
@@ -48,21 +48,21 @@ jobs:
         with:
           name: firmware
           path: |
-            build/kitchen_panel.bin
-            build/kitchen_panel-factory.bin
+            build/control_panel.bin
+            build/control_panel-factory.bin
 
       - name: Package HACS zip (integration + matching firmware)
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
           sudo chown -R "$(id -u)" build
           scripts/release_firmware.sh
-          cd custom_components/kitchen_panel && zip -qr "$GITHUB_WORKSPACE/kitchen_panel.zip" . -x '__pycache__/*'
+          cd custom_components/control_panel && zip -qr "$GITHUB_WORKSPACE/control_panel.zip" . -x '__pycache__/*'
 
       - name: Attach release assets
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            build/kitchen_panel.bin
-            build/kitchen_panel-factory.bin
-            kitchen_panel.zip
+            build/control_panel.bin
+            build/control_panel-factory.bin
+            control_panel.zip

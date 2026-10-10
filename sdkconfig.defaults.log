@@ -1,4 +1,4 @@
 # Overlay for running without a display: views go to the serial log.
 #   idf.py -B build-log -DSDKCONFIG=build-log/sdkconfig \
 #     -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.log" build
-CONFIG_KPANEL_RENDER_LOG=y
+CONFIG_CTLPANEL_RENDER_LOG=y

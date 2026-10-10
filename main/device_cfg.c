@@ -7,7 +7,7 @@
 
 #include "device_cfg.h"
 
-#define NAMESPACE "kpanel"
+#define NAMESPACE "ctlpanel"
 
 bool device_cfg_load(device_cfg_t *cfg)
 {
@@ -73,8 +73,8 @@ esp_err_t device_cfg_save(const device_cfg_t *cfg)
 
 void device_cfg_device_id(char *buf, size_t len)
 {
-    if (CONFIG_KPANEL_DEVICE_ID[0] != '\0') {
-        strlcpy(buf, CONFIG_KPANEL_DEVICE_ID, len);
+    if (CONFIG_CTLPANEL_DEVICE_ID[0] != '\0') {
+        strlcpy(buf, CONFIG_CTLPANEL_DEVICE_ID, len);
         return;
     }
     uint8_t mac[6];

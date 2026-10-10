@@ -1,5 +1,5 @@
 {
-  "name": "kitchen-panel-card-tests",
+  "name": "control-panel-card-tests",
   "private": true,
   "type": "module",
   "scripts": { "test": "node --test" },

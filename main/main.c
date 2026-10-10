@@ -16,7 +16,7 @@
 #include "ui_task.h"
 #include "wifi_conn.h"
 
-static const char *TAG = "kpanel";
+static const char *TAG = "ctlpanel";
 
 // Improv hands us candidate credentials; trial them and persist on success.
 static bool improv_try_connect(const char *ssid, const char *password)
@@ -61,9 +61,9 @@ void app_main(void)
     // Wi-Fi credentials: NVS (Improv-provisioned) first, then the optional
     // menuconfig dev fallback, else BLE provisioning via the HA app.
     const char *ssid = cfg.wifi_ssid[0] ? cfg.wifi_ssid
-                                        : CONFIG_KPANEL_WIFI_SSID;
+                                        : CONFIG_CTLPANEL_WIFI_SSID;
     const char *pass = cfg.wifi_ssid[0] ? cfg.wifi_pass
-                                        : CONFIG_KPANEL_WIFI_PASSWORD;
+                                        : CONFIG_CTLPANEL_WIFI_PASSWORD;
     if (ssid[0]) {
         ui_task_status("Connecting to Wi-Fi...");
         while (!wifi_conn_try(ssid, pass, 20000)) {
@@ -79,7 +79,7 @@ void app_main(void)
     adopt_server_start(device_id, provisioned);
     if (!provisioned) {
         // A successful adoption POST saves the config and reboots us.
-        ui_task_status("Add Kitchen Panel in Home Assistant");
+        ui_task_status("Add Control Panel in Home Assistant");
         for (;;) {
             vTaskDelay(portMAX_DELAY);
         }

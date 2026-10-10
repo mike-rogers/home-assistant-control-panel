@@ -108,11 +108,11 @@ void adopt_server_start(const char *device_id, bool provisioned)
 
     ESP_ERROR_CHECK(mdns_init());
     ESP_ERROR_CHECK(mdns_hostname_set(s_device_id));
-    ESP_ERROR_CHECK(mdns_instance_name_set("Kitchen Panel"));
-    ESP_ERROR_CHECK(mdns_service_add("Kitchen Panel", "_kpanel", "_tcp", 80, NULL, 0));
-    mdns_service_txt_item_set("_kpanel", "_tcp", "id", s_device_id);
-    mdns_service_txt_item_set("_kpanel", "_tcp", "version", PANEL_FW_VERSION);
-    mdns_service_txt_item_set("_kpanel", "_tcp", "provisioned",
+    ESP_ERROR_CHECK(mdns_instance_name_set("Control Panel"));
+    ESP_ERROR_CHECK(mdns_service_add("Control Panel", "_ctlpanel", "_tcp", 80, NULL, 0));
+    mdns_service_txt_item_set("_ctlpanel", "_tcp", "id", s_device_id);
+    mdns_service_txt_item_set("_ctlpanel", "_tcp", "version", PANEL_FW_VERSION);
+    mdns_service_txt_item_set("_ctlpanel", "_tcp", "provisioned",
                               provisioned ? "1" : "0");
 
     ESP_LOGI(TAG, "adoption endpoint up as %s.local (%s)", s_device_id,

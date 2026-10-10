@@ -3,7 +3,7 @@ managed_components/
 __pycache__/
 dependencies.lock
 # staged OTA binary (version.txt stays tracked)
-custom_components/kitchen_panel/firmware/kitchen_panel.bin
+custom_components/control_panel/firmware/control_panel.bin
 cmake-build-*/
 .idea/
 .vscode/

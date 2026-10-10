@@ -218,7 +218,7 @@ static void ui_task(void *arg)
 void ui_task_start(void)
 {
     ui_sm_config_t cfg = UI_SM_CONFIG_DEFAULT;
-#if CONFIG_KPANEL_CLOCK_24H
+#if CONFIG_CTLPANEL_CLOCK_24H
     cfg.clock_24h = true;
 #endif
     entity_store_init(&s_store);

@@ -123,8 +123,8 @@ static void init_panel(esp_lcd_panel_io_handle_t *io,
                        esp_lcd_panel_handle_t *panel)
 {
     spi_bus_config_t bus_cfg = {
-        .sclk_io_num = CONFIG_KPANEL_PIN_SCLK,
-        .mosi_io_num = CONFIG_KPANEL_PIN_MOSI,
+        .sclk_io_num = CONFIG_CTLPANEL_PIN_SCLK,
+        .mosi_io_num = CONFIG_CTLPANEL_PIN_MOSI,
         .miso_io_num = -1,
         .quadwp_io_num = -1,
         .quadhd_io_num = -1,
@@ -133,8 +133,8 @@ static void init_panel(esp_lcd_panel_io_handle_t *io,
     ESP_ERROR_CHECK(spi_bus_initialize(LCD_SPI_HOST, &bus_cfg, SPI_DMA_CH_AUTO));
 
     esp_lcd_panel_io_spi_config_t io_cfg = {
-        .dc_gpio_num = CONFIG_KPANEL_PIN_DC,
-        .cs_gpio_num = CONFIG_KPANEL_PIN_CS,
+        .dc_gpio_num = CONFIG_CTLPANEL_PIN_DC,
+        .cs_gpio_num = CONFIG_CTLPANEL_PIN_CS,
         .pclk_hz = LCD_PIXEL_CLOCK_HZ,
         .lcd_cmd_bits = 8,
         .lcd_param_bits = 8,
@@ -145,14 +145,14 @@ static void init_panel(esp_lcd_panel_io_handle_t *io,
         (esp_lcd_spi_bus_handle_t)LCD_SPI_HOST, &io_cfg, io));
 
     esp_lcd_panel_dev_config_t panel_cfg = {
-        .reset_gpio_num = CONFIG_KPANEL_PIN_RST,
+        .reset_gpio_num = CONFIG_CTLPANEL_PIN_RST,
         .rgb_ele_order = LCD_RGB_ELEMENT_ORDER_RGB,
         .bits_per_pixel = 16,
     };
     ESP_ERROR_CHECK(esp_lcd_new_panel_st7789(*io, &panel_cfg, panel));
     ESP_ERROR_CHECK(esp_lcd_panel_reset(*panel));
     ESP_ERROR_CHECK(esp_lcd_panel_init(*panel));
-#if CONFIG_KPANEL_LCD_INVERT
+#if CONFIG_CTLPANEL_LCD_INVERT
     ESP_ERROR_CHECK(esp_lcd_panel_invert_color(*panel, true));
 #endif
     ESP_ERROR_CHECK(esp_lcd_panel_disp_on_off(*panel, true));
@@ -329,11 +329,11 @@ void render_init(void)
     lvgl_port_lock(0);
     // LVGL swaps the resolution and the port applies the panel's
     // swap/mirror for the chosen rotation.
-#if CONFIG_KPANEL_LCD_LANDSCAPE && CONFIG_KPANEL_LCD_ROTATE_180
+#if CONFIG_CTLPANEL_LCD_LANDSCAPE && CONFIG_CTLPANEL_LCD_ROTATE_180
     lv_display_set_rotation(disp, LV_DISPLAY_ROTATION_270);
-#elif CONFIG_KPANEL_LCD_LANDSCAPE
+#elif CONFIG_CTLPANEL_LCD_LANDSCAPE
     lv_display_set_rotation(disp, LV_DISPLAY_ROTATION_90);
-#elif CONFIG_KPANEL_LCD_ROTATE_180
+#elif CONFIG_CTLPANEL_LCD_ROTATE_180
     lv_display_set_rotation(disp, LV_DISPLAY_ROTATION_180);
 #endif
     s_w = lv_display_get_horizontal_resolution(disp);
@@ -477,6 +477,6 @@ void render_view(const ui_view_t *view, const char *status)
 
     if (s_dimmed != view->dimmed) {
         s_dimmed = view->dimmed;
-        backlight_set(view->dimmed ? CONFIG_KPANEL_BACKLIGHT_DIM_PERCENT : 100);
+        backlight_set(view->dimmed ? CONFIG_CTLPANEL_BACKLIGHT_DIM_PERCENT : 100);
     }
 }

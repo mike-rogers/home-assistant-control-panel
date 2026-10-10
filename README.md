@@ -1,19 +1,20 @@
-# Kitchen Panel
+# Control Panel
 
 An ESP32 panel with an LCD and an Adafruit ANO wheel that runs Home
 Assistant actions from a menu composed in HA. The firmware is a generic
-menu engine; the `kitchen_panel` custom integration owns the menu, runs the
+menu engine; the `control_panel` custom integration owns the menu, runs the
 actions, and handles undo ("Oops").
 
-- Requirements and decisions: [`kitchen-panel-spec.md`](kitchen-panel-spec.md)
+- Requirements and decisions: [`control-panel-spec.md`](control-panel-spec.md)
 - Progress: [`MILESTONES.md`](MILESTONES.md)
+- License: MIT ([`LICENSE`](LICENSE))
 
 ## Layout
 
 | Path | What |
 |---|---|
 | `components/panel_core/` | Pure-C engine: menu parsing, UI state machine, protocol |
-| `custom_components/kitchen_panel/` | Home Assistant integration |
+| `custom_components/control_panel/` | Home Assistant integration |
 | `test/host/` | Unity tests for `panel_core` |
 | `tests/unit/` | Pure-Python tests for the menu model and dispatcher |
 | `tests/ha/` | Integration tests inside HA core (MQTT mocked) |
@@ -25,7 +26,7 @@ actions, and handles undo ("Oops").
 - Lonely Binary 2" or 2.4" TFT, 240×320, ST7789, SPI (used in landscape)
 - Adafruit ANO directional wheel on its I2C seesaw adapter (product 5740)
 
-Wiring (defaults, changeable in `idf.py menuconfig` → Kitchen Panel
+Wiring (defaults, changeable in `idf.py menuconfig` → Control Panel
 Configuration → Pins). It matches taskpad, which uses the same board:
 
 | LCD pin    | ESP32-C3 GPIO |
@@ -57,10 +58,10 @@ idf.py build flash monitor
 
 1. On first boot the panel asks for Wi-Fi: open the Home Assistant
    companion app, which offers to set up the panel over Bluetooth (Improv).
-2. HA then discovers it ("Kitchen Panel (panel-xxxxxx)"). Adopting it asks
+2. HA then discovers it ("Control Panel (panel-xxxxxx)"). Adopting it asks
    for the MQTT broker details, pushes them to the panel, and the panel
    restarts onto your broker.
-3. Add the **Kitchen Panel menu** card (`type: custom:kitchen-panel-card`)
+3. Add the **Control Panel menu** card (`type: custom:control-panel-card`)
    to a dashboard and compose the menu there; changes reach the panel
    immediately.
 
@@ -96,18 +97,19 @@ pip install -r tests/ha/requirements.txt
 ## Installing the integration (HACS)
 
 HACS is the supported install path. In HA: HACS → ⋮ → Custom repositories →
-add this repository's GitHub URL as an **Integration**, install
-**Kitchen Panel**, and restart. Each release bundles the matching panel
+add `https://github.com/mike-rogers/home-assistant-control-panel` as an
+**Integration**, install
+**Control Panel**, and restart. Each release bundles the matching panel
 firmware, so after a HACS update the panels offer it on their device pages.
 See [`RELEASING.md`](RELEASING.md).
 
 ## Trying the integration before the hardware exists
 
-Add **Kitchen Panel** by hand under Settings → Devices & Services (device id
-e.g. `kitchenpanel`), compose a menu in the card, then act as the device:
+Add **Control Panel** by hand under Settings → Devices & Services (device id
+e.g. `testpanel`), compose a menu in the card, then act as the device:
 
 ```sh
-mosquitto_sub -h <ha-ip> -u <user> -P <pass> -v -t 'panel/kitchenpanel/#'
-mosquitto_pub -h <ha-ip> -u <user> -P <pass> -t panel/kitchenpanel/request \
+mosquitto_sub -h <ha-ip> -u <user> -P <pass> -v -t 'panel/testpanel/#'
+mosquitto_pub -h <ha-ip> -u <user> -P <pass> -t panel/testpanel/request \
   -m '{"request_id":"t1","item_id":"goodnight","op":"run","value":null}'
 ```

@@ -1,12 +1,12 @@
-# Kitchen Panel — ESP32 Home Assistant Controller
+# Control Panel — ESP32 Home Assistant Controller
 
 Handoff spec for development. Hardware details marked **OPEN** are not decided; ask the owner before writing code that depends on them. Decisions made after the original handoff are recorded in §12.
 
 ## 1. Context
 
-The kitchen has a wall display (HDMI LCD + Raspberry Pi kiosk) that will show a passive Home Assistant dashboard: the family Google Calendar, weather, and house state. The display has no input and will not get any.
+A Control Panel is a small, mains-powered ESP32 device with its own LCD and a rotary/directional control that can live in any room. It triggers about a dozen Home Assistant actions from a shallow menu, and talks to HA only over MQTT. Each panel's menu is composed in HA, so the same hardware and firmware serve a kitchen, a bedside, or a hallway.
 
-This project is the **input side**: a small, mains-powered ESP32 device with its own LCD and a rotary/directional control. It triggers about a dozen Home Assistant actions from a shallow menu. It talks to HA only over MQTT and is independent of the display. The device must not require the display to work, and vice versa.
+The first panel goes in the kitchen, beside a wall display (HDMI LCD + Raspberry Pi kiosk) that shows a passive HA dashboard: the family calendar, weather, and house state. That display has no input and will not get any; the panel is the **input side**. The two are independent: the panel must not require the display to work, and vice versa.
 
 The primary user is the owner, but anyone in the family should be able to use it with no explanation. Avoid hidden chords, long-press-only features, and modes that are invisible on screen.
 
@@ -29,7 +29,7 @@ The primary user is the owner, but anyone in the family should be able to use it
 ## 3. Architecture
 
 ```
-[Kitchen Panel] ⇄ MQTT (Mosquitto) ⇄ [HA: kitchen_panel custom integration]
+[Control Panel] ⇄ MQTT (Mosquitto) ⇄ [HA: control_panel custom integration]
        ▲                                        │
        └── retained menu JSON + entity states ──┘
 ```
@@ -151,12 +151,12 @@ Rules:
 - Return to the top menu after about 30 s of inactivity (the Oops item, if live, stays visible there). Dim the backlight after about 60 s, and wake on any input without acting on that input.
 - No feature may be reachable only by long-press or by combinations of buttons.
 
-## 7. Home Assistant side: `custom_components/kitchen_panel`
+## 7. Home Assistant side: `custom_components/control_panel`
 
 A custom integration modeled on taskpad's, with these differences: multiple config entries (one per panel), and the menu editor described below.
 
-1. **Discovery and adoption.** The device advertises `_kpanel._tcp` over mDNS. The integration's zeroconf config flow pushes broker credentials to the device's local API, as in taskpad.
-2. **Menu storage and editor.** The menu tree for each panel lives in the integration's `.storage`. A dashboard card (`custom:kitchen-panel-card`) edits it: add items using HA's entity pickers (scripts, automations, scenes, `input_datetime`, and any entity for `info`), group them into submenus (max depth 3), reorder them, and set the label, confirm, undo, and step size. Saving publishes the retained menu immediately. Matching services exist for automations and Developer Tools.
+1. **Discovery and adoption.** The device advertises `_ctlpanel._tcp` over mDNS. The integration's zeroconf config flow pushes broker credentials to the device's local API, as in taskpad.
+2. **Menu storage and editor.** The menu tree for each panel lives in the integration's `.storage`. A dashboard card (`custom:control-panel-card`) edits it: add items using HA's entity pickers (scripts, automations, scenes, `input_datetime`, and any entity for `info`), group them into submenus (max depth 3), reorder them, and set the label, confirm, undo, and step size. Saving publishes the retained menu immediately. Matching services exist for automations and Developer Tools.
 3. **State publisher.** The integration tracks every entity referenced by the menu and publishes `panel/<id>/state/<entity_id>` (retained) on change and on startup.
 4. **Dispatcher.** Python, subscribed to `panel/<id>/request`:
    - `run`: calls the item's target (`script.turn_on`, `automation.trigger`, `scene.turn_on`) and publishes `result`.
@@ -199,7 +199,7 @@ test/host/          — IDF linux-target Unity tests for menu/ and the UI state 
 
 ## 10. Out of scope for v1
 
-- Driving the kitchen wall display (for example navigating its dashboard). This may be added later as a menu action type.
+- Driving a wall display (for example navigating its dashboard). This may be added later as a menu action type.
 - Battery operation and deep sleep.
 - Building more than one panel (the integration supports several, but only one is built).
 
@@ -219,6 +219,7 @@ None at the moment.
 - Device id defaults to `panel-` + the MAC's last three bytes (menuconfig can override); discovery reports it.
 - Requests use QoS 1, enqueued without blocking the UI; the MQTT outbox drops anything older than 4 s, and HA de-duplicates by `request_id`.
 - ESP-IDF v6.0. The repo holds firmware, integration, and card together.
+- Renamed from "Kitchen Panel" to the location-neutral **Control Panel** (domain `control_panel`, mDNS `_ctlpanel._tcp`); repo `mike-rogers/home-assistant-control-panel`, MIT licensed.
 - Undo snapshots use `State` capture + `async_reproduce_state` rather than `scene.create` (same mechanism, no stray scene entities).
 - HACS is the supported install path for the integration (taskpad's model: tagged releases ship a zip with the matching firmware baked in).
 - The integration targets HA 2026.10+ and uses `probatio` (HA's replacement for `voluptuous` since 2026.9).

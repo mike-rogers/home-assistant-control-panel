@@ -571,7 +571,7 @@ void ui_sm_view(const ui_sm_t *sm, uint32_t now_ms, ui_view_t *view)
 
     if (!sm->has_menu) {
         view->screen = UI_SCREEN_MESSAGE;
-        strlcpy(view->title, "Kitchen Panel", sizeof(view->title));
+        strlcpy(view->title, "Control Panel", sizeof(view->title));
         strlcpy(view->message,
                 sm->menu_error[0] ? sm->menu_error
                                   : "Waiting for the menu from Home Assistant",

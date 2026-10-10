@@ -4,8 +4,8 @@ import json
 
 import pytest
 
-from kitchen_panel.dispatcher import Dispatcher, Hooks
-from kitchen_panel.menu_model import validate_menu
+from control_panel.dispatcher import Dispatcher, Hooks
+from control_panel.menu_model import validate_menu
 
 MENU = validate_menu(
     {

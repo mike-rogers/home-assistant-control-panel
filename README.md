@@ -99,7 +99,9 @@ pip install -r tests/ha/requirements.txt
 HACS is the supported install path. In HA: HACS → ⋮ → Custom repositories →
 add `https://github.com/mike-rogers/home-assistant-control-panel` as an
 **Integration**, install
-**Control Panel**, and restart. Each release bundles the matching panel
+**Control Panel**, and restart. The integration registers the dashboard
+card itself; hard-refresh open browsers once (or reset the Companion app's
+frontend cache) or they report `custom element doesn't exist`. Each release bundles the matching panel
 firmware, so after a HACS update the panels offer it on their device pages.
 See [`RELEASING.md`](RELEASING.md).
 

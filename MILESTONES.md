@@ -110,8 +110,21 @@ tried in a real browser against a live HA.
       release zip with firmware baked in, `RELEASING.md`
 - [x] GitHub repository (public, so HACS can install it):
       `mike-rogers/home-assistant-control-panel`; MIT license
-- [ ] First tagged release installed through HACS
+- [x] First tagged release installed through HACS (v0.1.0, 2026-10-11)
 
 ## M5 — Acceptance pass
 
-- [ ] Walk spec §9 criteria 1–9 on real hardware
+Test rig: the taskpad unit (same Pro Micro ESP32-C3, 2.8" ST7789, ANO, same
+pins), with its flash backed up first. Verified there 2026-10-11: landscape
+rotation (default flipped), colors/inversion, ANO detection and retry.
+
+- [x] 1. Improv provisioning, discovery, adoption, menu renders
+- [x] 2. Card edits reach the device live
+- [x] 4. Action → Done → Oops restores (nested menus, value items too)
+- [x] 6. Time edit in steps; Oops restores the old value
+- [ ] 3. Wheel latency, including with HA unreachable (50ms check)
+- [ ] 5. Confirm prompt defaults to No
+- [ ] 7. Broker down: offline status, refusal message, self-recovery
+- [ ] 8. Power cycle with HA down shows the NVS menu
+- [ ] 9. Firmware update from the HA device page
+- [ ] Repeat on the production 2"/2.4" LCD

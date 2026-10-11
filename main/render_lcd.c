@@ -330,9 +330,9 @@ void render_init(void)
     // LVGL swaps the resolution and the port applies the panel's
     // swap/mirror for the chosen rotation.
 #if CONFIG_CTLPANEL_LCD_LANDSCAPE && CONFIG_CTLPANEL_LCD_ROTATE_180
-    lv_display_set_rotation(disp, LV_DISPLAY_ROTATION_270);
-#elif CONFIG_CTLPANEL_LCD_LANDSCAPE
     lv_display_set_rotation(disp, LV_DISPLAY_ROTATION_90);
+#elif CONFIG_CTLPANEL_LCD_LANDSCAPE
+    lv_display_set_rotation(disp, LV_DISPLAY_ROTATION_270);
 #elif CONFIG_CTLPANEL_LCD_ROTATE_180
     lv_display_set_rotation(disp, LV_DISPLAY_ROTATION_180);
 #endif

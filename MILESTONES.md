@@ -116,15 +116,17 @@ tried in a real browser against a live HA.
 
 Test rig: the taskpad unit (same Pro Micro ESP32-C3, 2.8" ST7789, ANO, same
 pins), with its flash backed up first. Verified there 2026-10-11: landscape
-rotation (default flipped), colors/inversion, ANO detection and retry.
+rotation (default flipped), colors/inversion, ANO detection and retry,
+wheel direction (clockwise = down / increase, fixed in 0.1.1).
 
 - [x] 1. Improv provisioning, discovery, adoption, menu renders
 - [x] 2. Card edits reach the device live
 - [x] 4. Action → Done → Oops restores (nested menus, value items too)
 - [x] 6. Time edit in steps; Oops restores the old value
-- [ ] 3. Wheel latency, including with HA unreachable (50ms check)
-- [ ] 5. Confirm prompt defaults to No
-- [ ] 7. Broker down: offline status, refusal message, self-recovery
-- [ ] 8. Power cycle with HA down shows the NVS menu
-- [ ] 9. Firmware update from the HA device page
+- [x] 3. Wheel latency, including with HA unreachable
+- [x] 5. Confirm prompt defaults to No
+- [x] 7. Broker down: offline status, refusal message, self-recovery
+- [-] 8. Power cycle with HA down shows the NVS menu (not tested; owner
+      waived it 2026-10-11)
+- [x] 9. Firmware update from the HA device page (0.1.0 → 0.1.1 via HACS)
 - [ ] Repeat on the production 2"/2.4" LCD

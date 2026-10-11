@@ -32,16 +32,14 @@ static const char *TAG = "ano";
 static i2c_master_bus_handle_t s_bus;
 static i2c_master_dev_handle_t s_dev;
 
-// Undo a partial init so a later ano_seesaw_init() can retry cleanly.
+// Undo a partial init so a later ano_seesaw_init() can retry cleanly. The
+// bus stays up: deleting and re-creating it between probes made the next
+// probe report a phantom ACK with nothing attached.
 static bool give_up(void)
 {
     if (s_dev != NULL) {
         i2c_master_bus_rm_device(s_dev);
         s_dev = NULL;
-    }
-    if (s_bus != NULL) {
-        i2c_del_master_bus(s_bus);
-        s_bus = NULL;
     }
     return false;
 }
@@ -95,16 +93,25 @@ bool ano_seesaw_init(int sda_pin, int scl_pin)
         // floating so the probe fails cleanly.
         .flags.enable_internal_pullup = true,
     };
-    esp_err_t err = i2c_new_master_bus(&bus_cfg, &s_bus);
-    if (err != ESP_OK) {
-        ESP_LOGW(TAG, "I2C bus init failed: %s", esp_err_to_name(err));
-        return false;
+    static bool s_reported_absent;
+    esp_err_t err;
+    if (s_bus == NULL) {
+        err = i2c_new_master_bus(&bus_cfg, &s_bus);
+        if (err != ESP_OK) {
+            ESP_LOGW(TAG, "I2C bus init failed: %s", esp_err_to_name(err));
+            s_bus = NULL;
+            return false;
+        }
     }
     err = i2c_master_probe(s_bus, ANO_ADDR, I2C_TIMEOUT_MS);
     if (err != ESP_OK) {
         // NOT_FOUND = nothing acked; TIMEOUT = a line is stuck (shorted).
-        ESP_LOGI(TAG, "no ANO encoder at 0x%02x (%s)", ANO_ADDR,
-                 esp_err_to_name(err));
+        // Retries are silent so an absent encoder doesn't flood the log.
+        if (!s_reported_absent) {
+            ESP_LOGI(TAG, "no ANO encoder at 0x%02x (%s)", ANO_ADDR,
+                     esp_err_to_name(err));
+            s_reported_absent = true;
+        }
         return give_up();
     }
 
@@ -119,12 +126,13 @@ bool ano_seesaw_init(int sda_pin, int scl_pin)
     }
 
     uint8_t rst = 0xFF;
-    ss_write(SS_STATUS, SS_STATUS_SWRST, &rst, 1);
+    esp_err_t rst_err = ss_write(SS_STATUS, SS_STATUS_SWRST, &rst, 1);
 
-    // The seesaw takes a variable time to come back from reset, so poll
-    // for it rather than trusting a fixed delay.
+    // The seesaw takes a variable time to come back from reset (Adafruit's
+    // library allows 500ms), so poll for it rather than trusting a delay.
     uint32_t version = 0;
-    for (int attempt = 0; attempt < 20; attempt++) {
+    int attempt;
+    for (attempt = 0; attempt < 50; attempt++) {
         vTaskDelay(pdMS_TO_TICKS(10));
         err = ss_read_u32(SS_STATUS, SS_STATUS_VERSION, &version);
         if (err == ESP_OK) {
@@ -132,8 +140,8 @@ bool ano_seesaw_init(int sda_pin, int scl_pin)
         }
     }
     if (err != ESP_OK) {
-        ESP_LOGW(TAG, "ANO encoder not responding after reset (%s)",
-                 esp_err_to_name(err));
+        ESP_LOGW(TAG, "ANO encoder not responding after reset (%s; reset %s)",
+                 esp_err_to_name(err), esp_err_to_name(rst_err));
         return give_up();
     }
     // The upper half of the version register is the Adafruit product id.
@@ -155,7 +163,7 @@ bool ano_seesaw_init(int sda_pin, int scl_pin)
     int32_t discard;
     ano_seesaw_read_delta(&discard);
 
-    ESP_LOGI(TAG, "ANO encoder ready");
+    ESP_LOGI(TAG, "ANO encoder ready (%d ms after reset)", (attempt + 1) * 10);
     return true;
 }
 

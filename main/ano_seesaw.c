@@ -182,8 +182,9 @@ esp_err_t ano_seesaw_read_delta(int32_t *delta)
     uint32_t raw;
     esp_err_t err = ss_read_u32(SS_ENCODER, SS_ENCODER_DELTA, &raw);
     if (err == ESP_OK) {
-        // The seesaw counts counter-clockwise as positive.
-        *delta = -(int32_t)raw;
+        // Clockwise is positive (checked on the ANO): down the list, and
+        // up in value. Taskpad negates this; on hardware that was backwards.
+        *delta = (int32_t)raw;
     }
     return err;
 }

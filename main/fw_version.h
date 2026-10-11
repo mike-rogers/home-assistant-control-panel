@@ -1,3 +1,3 @@
 #pragma once
 
-#define PANEL_FW_VERSION "0.1.0"
+#define PANEL_FW_VERSION "0.1.1"

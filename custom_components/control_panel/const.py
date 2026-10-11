@@ -24,4 +24,4 @@ FIRMWARE_URL = "/control_panel_files/firmware.bin"
 CARD_URL = "/control_panel_files/control-panel-card.js"
 FIRMWARE_FILE = "control_panel.bin"
 
-VERSION = "0.1.0"  # keep in sync with manifest.json
+VERSION = "0.1.1"  # keep in sync with manifest.json

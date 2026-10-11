@@ -59,8 +59,9 @@ idf.py build flash monitor
 1. On first boot the panel asks for Wi-Fi: open the Home Assistant
    companion app, which offers to set up the panel over Bluetooth (Improv).
 2. HA then discovers it ("Control Panel (panel-xxxxxx)"). Adopting it asks
-   for the MQTT broker details, pushes them to the panel, and the panel
-   restarts onto your broker.
+   for the MQTT broker details (see the MQTT login step under
+   [Installing the integration](#installing-the-integration-hacs)), pushes
+   them to the panel, and the panel restarts onto your broker.
 3. Add the **Control Panel menu** card (`type: custom:control-panel-card`)
    to a dashboard and compose the menu there; changes reach the panel
    immediately.
@@ -96,14 +97,31 @@ pip install -r tests/ha/requirements.txt
 
 ## Installing the integration (HACS)
 
-HACS is the supported install path. In HA: HACS → ⋮ → Custom repositories →
-add `https://github.com/mike-rogers/home-assistant-control-panel` as an
-**Integration**, install
-**Control Panel**, and restart. The integration registers the dashboard
-card itself; hard-refresh open browsers once (or reset the Companion app's
-frontend cache) or they report `custom element doesn't exist`. Each release bundles the matching panel
-firmware, so after a HACS update the panels offer it on their device pages.
-See [`RELEASING.md`](RELEASING.md).
+HACS is the supported install path.
+
+1. HACS → ⋮ → Custom repositories → add
+   `https://github.com/mike-rogers/home-assistant-control-panel` as an
+   **Integration**, install **Control Panel**, and restart HA.
+2. Hard-refresh open browsers once (or reset the Companion app's frontend
+   cache). The integration registers its dashboard card itself, but pages
+   loaded before that report `custom element doesn't exist`.
+3. Create an MQTT login for the panels. The Mosquitto app accepts any HA
+   user, so one user serves every panel:
+   - Turn on **Advanced mode** in your profile, then Settings → People →
+     **Users** → Add user (e.g. `Control Panel`; the generated username,
+     `control-panel`, is the MQTT username).
+   - Set a password, turn on **Can only log in from the local network**,
+     leave **Administrator** off, and keep **Allow person to login** on (a
+     user without a password can't authenticate to Mosquitto either).
+   - Don't use the names `homeassistant` or `addons`; Mosquitto reserves them.
+
+   Prefer MQTT-only accounts? Add them under the Mosquitto app's
+   Configuration → `logins` instead and restart the app.
+4. Adopt each discovered panel with that username and password, plus your
+   broker's host and port (1883).
+
+Each release bundles the matching panel firmware, so after a HACS update the
+panels offer it on their device pages. See [`RELEASING.md`](RELEASING.md).
 
 ## Trying the integration before the hardware exists
 

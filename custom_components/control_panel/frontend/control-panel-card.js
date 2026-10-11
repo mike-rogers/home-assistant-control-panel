@@ -7,7 +7,7 @@
  * so the panel always shows what this card shows.
  */
 
-const CARD_VERSION = "0.1.0";
+const CARD_VERSION = "0.1.1";
 console.info(`[control-panel-card] v${CARD_VERSION}`);
 
 const MAX_DEPTH = 3;
